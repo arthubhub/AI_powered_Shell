@@ -7,7 +7,7 @@
 
 ## OS feature global design
 
-![Fig. 1: AISH workflow](Term%20project%20assignment%202%2029660a0dc9098088a37edaf9e29fa14c/KSS-design.jpg)
+<img width="689" height="640" alt="image" src="https://github.com/user-attachments/assets/a0f380d6-e00d-489d-bae4-54e1dad2ab7b" />
 
 Fig. 1: AISH workflow
 
