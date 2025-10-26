@@ -24,7 +24,7 @@ We first want to make clear how the LLM should process requests. This part must 
   -  Know how it should handle data
   -  Know how it should answer to the user
   -  Know it abalilities
-In order to solve this problem, we must create a verry good first prompt, and find a way to make it persistant. For example we can send it at each request, or we can try to find a parameter to specify it.
+In order to solve this problem, we must create a verry good first prompt, and find a way to make it persistant. For example we can send it at each request, or we can try to find a parameter to specify it. Finally, we do not want the ai to use data from the examples to answer, just the structure, we have to clearly anounce it.
 
 ### **Context** :
 We then wants the AI to understand the context behind the user prompt :
@@ -35,4 +35,7 @@ We then wants the AI to understand the context behind the user prompt :
 To do so, we have to log previous commands. Then we have to find the best way to structure the data ine a clear way to make the AI able to easyly filter data. Maybe using json or yaml could be a good solution if AI handles it.
 
 ### **User Prompt**:
-We must 
+The user prompt should be process normally. However, it could be a good feature to allow the user to ask something else to the AI concerning the previous response.
+
+### *Aditional feature*:
+The AI might need more specific context to handle user request, like analysing a file, or see the result of a specific command. A good feature could be to allow the AI to ask the program for aditional data using pre made requests.
