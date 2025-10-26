@@ -57,7 +57,7 @@ update_context() {
         CURRENT_SCRIPT_NAME="${BASH_SCRIPT_NAME}"
     fi
     
-    echo -e "${GREEN}✓ Context updated for ${DEFAULT_SHELL} shell${NC}"
+    echo -e "${GREEN}+ Context updated for ${DEFAULT_SHELL} shell${NC}"
     return 0
 }
 
@@ -84,12 +84,12 @@ update_rc() {
     local rc_stubs="$(cat "${rc_path}" | grep "${AI_POWERED_SHELL}")"
     
     if [[ "${rc_stubs}" != "" ]]; then
-        echo -e "${YELLOW}⚠ Link to ${USER_HOME}/.${AI_POWERED_SHELL} already exists in ${shell_type}rc${NC}"
+        echo -e "${YELLOW}! Link to ${USER_HOME}/.${AI_POWERED_SHELL} already exists in ${shell_type}rc${NC}"
     else
         echo -ne "\n\n" >> "${rc_path}"
         echo "export AI_POWERED_SHELL_PATH=\"${AI_POWERED_SHELL_PATH}\"" >> "${rc_path}"
         echo "source \"\${AI_POWERED_SHELL_PATH}/${script_name}\"" >> "${rc_path}"
-        echo -e "${GREEN}✓ Link to ${USER_HOME}/.${AI_POWERED_SHELL} has been added to ${shell_type}rc${NC}"
+        echo -e "${GREEN}+ Link to ${USER_HOME}/.${AI_POWERED_SHELL} has been added to ${shell_type}rc${NC}"
     fi
 }
 
@@ -119,7 +119,7 @@ update_files() {
     if [[ -f "${src_dir}/${script_name}" ]]; then
         echo -e "${BLUE}Copying ${script_name}...${NC}"
         cp "${src_dir}/${script_name}" "${AI_POWERED_SHELL_PATH}/"
-        echo -e "${GREEN}✓ ${script_name} copied${NC}"
+        echo -e "${GREEN}+ ${script_name} copied${NC}"
     else
         echo -e "${RED}Error: ${src_dir}/${script_name} not found${NC}"
         return 1
@@ -128,12 +128,12 @@ update_files() {
     if [[ -d "src/python" ]]; then
         echo -e "${BLUE}Copying Python files...${NC}"
         cp -r "src/python" "${AI_POWERED_SHELL_PATH}/"
-        echo -e "${GREEN}✓ Python files copied${NC}"
+        echo -e "${GREEN}+ Python files copied${NC}"
     else
-        echo -e "${YELLOW}⚠ Warning: src/python directory not found${NC}"
+        echo -e "${YELLOW}! Warning: src/python directory not found${NC}"
     fi
     
-    echo -e "${GREEN}✓ Files updated successfully.${NC}"
+    echo -e "${GREEN}+ Files updated successfully.${NC}"
 }
 
 install_ai_powered_shell() {
