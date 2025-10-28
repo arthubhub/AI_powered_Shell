@@ -9,12 +9,37 @@
 
 autoload -Uz add-zsh-hook                                                                                                                                                                                    
 
-aishtmplogfile="/tmp/zsh-output-$(date +%Y%m%d_%H%M%S).log"
-echo "See command results in $aishtmplogfile"
-echo '{"command_history": {}}' > /tmp/aishistory.json
-cat /tmp/aishistory.json
+aishtmplogfile="/tmp/zsh-output-$USER-$(date +%Y%m%d_%H%M%S).log"
+aishjsonlogfile="/tmp/aishistory_$USER.json"
+aishjsonlogtmpfile="/tmp/aishistory_$USER.json.tmp"
 
+
+echo "See command results in $aishtmplogfile"
+
+
+
+# Create files :
+if [ -f "$aishjsonlogfile" ]; then
+    echo "Reusing existing command_history"
+else
+    echo '{"command_history": {}}' > "$aishjsonlogfile"
+fi
+echo "" > "$aishtmplogfile"
+echo "" > "$aishjsonlogtmpfile"
+
+# Access control
+chmod 600 "$aishtmplogfile" "$aishjsonlogfile" "$aishjsonlogtmpfile" # to avoid other users to read history
+
+#Debugging - printthe dates of the commands of the current user
+jq -r '.command_history | keys[]'  "$aishjsonlogfile"
+
+
+# Global variables
 current_aish_command_date=""
+LINES_LIMIT="100"
+CHARS_LIMIT="2000"
+
+
 typeset -gi LOGGING_ENABLED=1
 typeset -gi LOGGING_IN_PROGRESS=0
 
@@ -30,8 +55,8 @@ function log_command_preexec() {
         # from https://unix.stackexchange.com/questions/548892/how-to-json-escape-input
         jq --arg d "$current_aish_command_date" --arg f "$1" \
           '.command_history[($d)] = {command: {content: $f}, result: {content: ""}}' \
-          < /tmp/aishistory.json > /tmp/aishistory.json.tmp && \
-          mv /tmp/aishistory.json.tmp /tmp/aishistory.json
+          < "$aishjsonlogfile" > "$aishjsonlogtmpfile" && \
+          cp "$aishjsonlogtmpfile" "$aishjsonlogfile"
 
         echo "" > "$aishtmplogfile"
         LOGGING_IN_PROGRESS=0
@@ -56,8 +81,8 @@ function log_command_precmd() {
         # from https://unix.stackexchange.com/questions/548892/how-to-json-escape-input
         jq --arg d "$current_aish_command_date" --arg f "$output" \
           '.command_history[($d)].result.content = $f' \
-          < /tmp/aishistory.json > /tmp/aishistory.json.tmp && \
-          mv /tmp/aishistory.json.tmp /tmp/aishistory.json
+          < "$aishjsonlogfile" > "$aishjsonlogtmpfile" && \
+          cp "$aishjsonlogtmpfile" "$aishjsonlogfile"
         
         LOGGING_IN_PROGRESS=0
     fi
@@ -82,7 +107,7 @@ command_not_found_handler() {
         echo "Shell              : $SHELL"
         echo "User               : $(whoami)"
         echo "OS                 : $(uname -a)"
-        echo "Recent commands: $(tail -20 "$HOME/.zsh_history" 2>/dev/null || echo "No history available")"
+        echo "Recent commands: $(tail -n "$LINES_LIMIT" "$HOME/.zsh_history" | tail -c "$CHARS_LIMIT" 2>/dev/null || echo "No history available")"
         echo "-----------------------"
         echo "Result of last commands:"
         if [[ -f "$aishtmplogfile" ]]; then
