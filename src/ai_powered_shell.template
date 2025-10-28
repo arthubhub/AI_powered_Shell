@@ -1,0 +1,95 @@
+# This file is a template file for both bash and zsh scripts
+
+
+### 1. Variables declaration
+
+## FILES
+# temp file storing last command output -> user specific file
+# temp file storing new json file value -> user specific file
+# json file containing list of previous commands -> user specific file
+# file containing all context to be sent to ollama:
+"""
+{
+"command_history": { "date1": {"command": "ls -l", "result": ".\n..\n"}, "date2": {"command": "cat ../file.txt", "result": "hello\n"} },
+"environment_context" : {"OS": "Darwin MacBook-Pro-... 22.6.0 Darwin Kernel", "User": "user_name", "shell": "/bin/bash", "pwd": "/user/root/Desktop", "directory_content": "birthday_party dhcpcd.conf" }
+}
+"""
+
+## Static variables
+# Max number of lines of the result to store in json file
+# Max number of bytes of the result to store in json file
+# Ollama model to be used
+# Logging state flag -> logging enable/disable -> avoid debugging while the program take the hand on the execution AND avoir recursive calls
+
+## Mutable variables
+# Date of the running command
+
+
+### 2. Functions to run once
+
+## Check requirements (run once)
+# - Python3
+# - Ollama
+# - Python3 ollama library
+# - Ollama model
+
+## Access control (run once)
+# - Check files existence, create missing ones
+# - Update files access rights (600 : - R-- --- ---)
+
+## Check that Ollama is running
+# - read the title again
+
+### 3. Functions 
+
+## create_context_file
+# - Clear file
+# - Put the json history file to the context file
+# - Run commands to get additional context
+# - Insert result into the context file
+
+
+## ollama_interactions (maybe find a way to print result as a stream)
+# Local variable : ollama result
+# - call python3 with the python script that handles the communication with ollama, give the context file path and the model as a parameter
+# - output result to the user
+
+### 4. Hooks (function called automatically at specific moments)
+
+## log_command_preexec
+# - check if logging is enabled -> True = return
+# - set logging flag to False -> logging in progress
+# - set the date of current command 
+# - add the current command to the json file (see logging poc)
+# - set the logging flag to True -> logging can continue
+
+
+## log_command_precmd
+# - check if logging is enabled -> True = return
+# - set logging flag to False -> logging in progress
+# - wait a small time to permit the write of call output to file 
+# - check if the file exists and is not emty
+# - get the file content with size limit using pre defined Static Variables
+# - add the result to the json file using the same date as when the command was called 
+# - set the logging flag to True -> logging can continue
+
+## command_not_found_handler
+# Local var : failed_command
+# Local var : mode = "1" -> quick or "2" -> reflexion
+# - check if logging is enable -> false = return
+# - set logging flag to False -> logging in progress
+# - get the command that has produced the error -> failed_command
+# - ask the user if he wants to have help : Q/q : quick , P/p : Precise (default) : F/f : False
+# - if false restore context and exit (logging flag to True)
+# - call create_context_file
+# - call ollama_interactions
+# - set the logging flag to True -> logging can continue
+
+
+### 5. Hooks registration
+# - "autoload -Uz add-zsh-hook"
+# - "add-zsh-hook preexec log_command_preexec"
+# - "add-zsh-hook precmd log_command_precmd"
+
+### 6. Add outputing of commands to log file
+# - "exec > >(tee -a "$aishtmplogfile") 2>&1"
