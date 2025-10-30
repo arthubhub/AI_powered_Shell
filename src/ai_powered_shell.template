@@ -85,11 +85,11 @@
 # - call ollama_interactions
 # - set the logging flag to True -> logging can continue
 
+### 5. Add outputing of commands to log file
+# - "exec > >(tee -a "$aishtmplogfile") 2>&1"
 
-### 5. Hooks registration
+### 6. Hooks registration
 # - "autoload -Uz add-zsh-hook"
 # - "add-zsh-hook preexec log_command_preexec"
 # - "add-zsh-hook precmd log_command_precmd"
 
-### 6. Add outputing of commands to log file
-# - "exec > >(tee -a "$aishtmplogfile") 2>&1"
