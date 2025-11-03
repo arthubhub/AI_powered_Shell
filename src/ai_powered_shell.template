@@ -59,7 +59,7 @@
 ## log_command_preexec
 # - check if logging is enabled -> True = return
 # - set logging flag to False -> logging in progress
-# - set the date of current command 
+# - set the date of current command (gdate +%FT%T.%3N)
 # - add the current command to the json file (see logging poc)
 # - set the logging flag to True -> logging can continue
 
