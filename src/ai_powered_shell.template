@@ -4,10 +4,10 @@
 ### 1. Variables declaration
 
 ## FILES
-# temp file storing last command output -> user specific file
+# temp file storing last command output -> user specific file and per - terminal command : "ps -p $$ -o pid="
 # temp file storing new json file value -> user specific file
 # json file containing list of previous commands -> user specific file
-# file containing all context to be sent to ollama:
+# file containing all context to be sent to ollama (user specific):
 """
 {
 "command_history": { "date1": {"command": "ls -l", "result": ".\n..\n"}, "date2": {"command": "cat ../file.txt", "result": "hello\n"} },
