@@ -73,7 +73,7 @@
 # - add the result to the json file using the same date as when the command was called 
 # - set the logging flag to True -> logging can continue
 
-## command_not_found_handler
+## command_not_found_handler , command_fails_handler
 # Local var : failed_command
 # Local var : mode = "1" -> quick or "2" -> reflexion
 # - check if logging is enable -> false = return
@@ -85,6 +85,8 @@
 # - call ollama_interactions
 # - set the logging flag to True -> logging can continue
 
+
+
 ### 5. Add outputing of commands to log file
 # - "exec > >(tee -a "$aishtmplogfile") 2>&1"
 
@@ -92,4 +94,8 @@
 # - "autoload -Uz add-zsh-hook"
 # - "add-zsh-hook preexec log_command_preexec"
 # - "add-zsh-hook precmd log_command_precmd"
+
+### 7. Traps
+# trap int :  interruptions during execution of ai_powered_shell -> Reconstruct the logic in case of interruptions, Log the result as if the usual post call function would do
+
 
