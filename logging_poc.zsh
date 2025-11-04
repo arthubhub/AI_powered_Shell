@@ -88,6 +88,45 @@ function log_command_precmd() {
     fi
 }
 
+# Handle Ctrl+C interruptions
+TRAPINT() {
+    if [[ $LOGGING_ENABLED -eq 1 && -n "$current_aish_command_date" ]]; then
+        local prev_in_progress=$LOGGING_IN_PROGRESS
+        LOGGING_IN_PROGRESS=1
+        
+        local output=""
+        if [[ -f "$aishtmplogfile" && -r "$aishtmplogfile" && -s "$aishtmplogfile" ]]; then
+            output="$(tail -100 "$aishtmplogfile" 2>/dev/null || echo "")"
+        fi
+        
+        # Append interruption marker
+        if [[ -n "$output" ]]; then
+            output="$output
+^C (interrupted)"
+        else
+            output="^C (interrupted)"
+        fi
+        
+        
+        jq --arg d "$current_aish_command_date" --arg f "$output" \
+          '.command_history[($d)].result.content = $f' \
+          < "$output" > "$aishjsonlogtmpfile" && \
+          cp "$aishjsonlogtmpfile" "$aishjsonlogfile"
+
+
+        current_aish_command_date=""
+        LOGGING_IN_PROGRESS=$prev_in_progress
+    fi
+    return 130
+}
+
+# Handle other signals for robustness
+TRAPTERM() {
+    TRAPINT
+    return 143
+}
+
+
 add-zsh-hook preexec log_command_preexec
 add-zsh-hook precmd log_command_precmd
 
@@ -125,4 +164,4 @@ command_not_found_handler() {
     return 127
 }
 
-exec > >(tee -a "$aishtmplogfile") 2>&1
+exec > >(tee -a "$aishtmplogfile" 2>/dev/null || cat) 2>&1
