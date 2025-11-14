@@ -41,12 +41,6 @@ check_requirements() {
         missing_requirements=1
     fi
     
-    if ! python3 -c "import ollama" 2>/dev/null; then
-        echo "Error: Python ollama library is required." >&2
-        echo "Install with: pip3 install ollama" >&2
-        missing_requirements=1
-    fi
-    
     if command -v ollama &> /dev/null; then
         if ! ollama list 2>/dev/null | grep -q "^${OLLAMA_MODEL}"; then
             echo "Warning: Ollama model '${OLLAMA_MODEL}' not found." >&2
@@ -69,7 +63,7 @@ setup_access_control() {
     fi
     
     touch "$TEMP_LAST_OUTPUT" "$TEMP_LOGS_JSON" "$CONTEXT_FILE"
-        chmod 600 "$TEMP_LAST_OUTPUT" "$LOGS_JSON" "$TEMP_LOGS_JSON" "$CONTEXT_FILE" 2>/dev/null
+    chmod 600 "$TEMP_LAST_OUTPUT" "$LOGS_JSON" "$TEMP_LOGS_JSON" "$CONTEXT_FILE" 2>/dev/null
 }
 
 check_ollama_running() {
@@ -345,7 +339,7 @@ run_and_log_command() {
 
 
 # Run setup functions
-if [[ check_requirements -eq "0" ]]; then
+if check_requirements; then
     setup_access_control
     check_ollama_running
     
