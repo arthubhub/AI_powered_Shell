@@ -70,53 +70,12 @@ check_ollama_running() {
 }
 
 ### 3. FUNCTIONS
-create_context_file() { # This will be modified to be 100% json
-    echo "" > "$CONTEXT_FILE"
-    
-    cat >> "$CONTEXT_FILE" << EOF
-=== SYSTEM CONTEXT ===
-Current Directory: $PWD
-Shell: $SHELL
-User: $(whoami)
-OS: $(uname -a)
-Date: $(date)
-
-=== COMMAND HISTORY ===
-EOF
-    
-    # Add JSON history (last 10 commands)
-    if [[ -f "$LOGS_JSON" ]]; then
-        echo "Recent command history:" >> "$CONTEXT_FILE"
-        jq -r '.command_history | to_entries | .[-10:] | .[] | "[\(.key)] Command: \(.value.command.content)\nResult: \(.value.result.content)\n"' \
-            "$LOGS_JSON" 2>/dev/null >> "$CONTEXT_FILE" || echo "No history available" >> "$CONTEXT_FILE"
-    fi
-    
-    # Add recent shell history
-    echo -e "\n=== RECENT SHELL COMMANDS ===" >> "$CONTEXT_FILE"
-    if [[ -f "$HOME/.bash_history" ]]; then
-        tail -n 20 "$HOME/.bash_history" 2>/dev/null | tail -c "$MAX_LOGGED_BYTES" >> "$CONTEXT_FILE" || echo "No shell history available" >> "$CONTEXT_FILE"
-    fi
-    
-    # Add environment information
-    echo -e "\n=== ENVIRONMENT ===" >> "$CONTEXT_FILE"
-    echo "PATH: $PATH" >> "$CONTEXT_FILE"
-    echo "HOME: $HOME" >> "$CONTEXT_FILE"
-    
-    # Add last command output if available
-    if [[ -f "$TEMP_LAST_OUTPUT" && -s "$TEMP_LAST_OUTPUT" ]]; then
-        echo -e "\n=== LAST COMMAND OUTPUT ===" >> "$CONTEXT_FILE"
-        tail -n "$MAX_LOGGED_LINES" "$TEMP_LAST_OUTPUT" | tail -c "$MAX_LOGGED_BYTES" >> "$CONTEXT_FILE"
-    fi
-}
 
 ollama_interaction() {
     local prompt="$1"
     local mode="${2:-quick}"  # quick or reflexion
     
-    # Create Python script for Ollama interaction
-    echo "Calling python ..."
-    local result="$(echo "run pyhton code")"
-    echo "> ${result}"
+    python3 "${AI_POWERED_SHELL_PATH}/python/python_md.py" "$LOGS_JSON" "$prompt"
 }
 
 command_to_json() {
@@ -217,9 +176,6 @@ command_not_found_handle() {
                 ;;
         esac
         
-        # Create context and get AI help
-        create_context_file
-        
         local prompt="The command '$failed_command $args' was not found. What should I do?"
         ollama_interaction "$prompt" "$mode"
         
@@ -267,9 +223,7 @@ handle_command_failure() {
             return $exit_code
             ;;
     esac
-    
-    # Create context and get AI help
-    create_context_file
+
     
     local prompt="The command '$failed_command' failed with exit code $exit_code. What went wrong and how can I fix it?"
     ollama_interaction "$prompt" "$mode"
