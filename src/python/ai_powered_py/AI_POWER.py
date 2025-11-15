@@ -5,6 +5,30 @@ import json
 class AI_POWER:
     def __init__(self):
         self.workers = {}
+    
+    def to_markdown(self, module, data: dict) -> str:
+
+        markdown = f"## {module}\n"
+        for key, elem in data.items():
+            markdown += f"- **{key}:**\n"
+            if isinstance(elem, str):
+                markdown += f"  `{elem}`\n"
+            elif isinstance(elem, list):
+                markdown += "  ```\n"
+                for val in elem:
+                    markdown += f"  {val}\n"
+                markdown += "  ```\n"
+            elif isinstance(elem, dict):
+                markdown += "  ```\n"
+                for dict_key, dict_val in elem.items():
+                    if isinstance(dict_val, dict):
+                        markdown += f"  {dict_key}:\n"
+                        for sub_key, sub_val in dict_val.items():
+                            markdown += f"    - {sub_key}: `{sub_val}`\n"
+                    else:
+                        markdown += f"  {dict_key}: `{dict_val}`\n"
+                markdown += "  ```\n"
+        return markdown
 
     def loadWorkers(self):
         excludelist=["abstract"]
@@ -28,30 +52,29 @@ class AI_POWER:
     def runWorkers(self):
         name="file_analysis"
         file_list=["../../../install.sh","/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall/ch64"]
-        print("-"*20,name,"-"*20)
-        json_string=json.dumps(self.workers[name].executeAction(file_list), indent=4)
-        print(json_string)
+        markdown=self.to_markdown(name,self.workers[name].executeAction(file_list))
+        print(markdown)
 
         name="executable_analysis"
         file_list=["/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall/ch64"]
-        print("-"*20,name,"-"*20)
-        json_string=json.dumps(self.workers[name].executeAction(file_list), indent=4)
-        print(json_string)
+        markdown=self.to_markdown(name,self.workers[name].executeAction(file_list))
+        print(markdown)
+
 
         name="network_conf"
-        print("-"*20,name,"-"*20)
-        json_string = json.dumps(self.workers[name].executeAction(), indent=4)
-        print(json_string)
+        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        print(markdown)
+
 
         name="hardware_info"
-        print("-"*20,name,"-"*20)
-        json_string = json.dumps(self.workers[name].executeAction(), indent=4)
-        print(json_string)
+        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        print(markdown)
+
 
         name="system_info"
-        print("-"*20,name,"-"*20)
-        json_string = json.dumps(self.workers[name].executeAction(), indent=4)
-        print(json_string)
+        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        print(markdown)
+
         
 
 

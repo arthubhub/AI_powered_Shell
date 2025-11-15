@@ -3,7 +3,7 @@ import subprocess
 import json
 import workers.abstract
 
-class Hardware(workers.abstract.AbstractWorker):
+class HardwareInfos(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions = ["getCPUInfo", "getRAMInfo", "getGPUInfo", "getStorageInfo"]
         self.behavior = "No args needed. Returns hardware information."

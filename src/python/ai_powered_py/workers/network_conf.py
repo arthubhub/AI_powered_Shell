@@ -22,7 +22,6 @@ class NetworkConf(workers.abstract.AbstractWorker):
         self.result["getRoute"]=self._getRoute()
         self.result["traceRoute"]=self._traceRoute()
         self.result["pingInternet"]=self._pingInternet()
-
         return self.result
     
     def _getInterfaces(self) -> dict[dict]:
@@ -58,11 +57,8 @@ class NetworkConf(workers.abstract.AbstractWorker):
         ping_results={}
         hosts=["yahoo.com", "8.8.8.8"]
         for host in hosts:
-            print(host)
             ping_results["host"]=self.__runPingWithTimeout(host).splitlines()
         return ping_results
-
-
 
 
 

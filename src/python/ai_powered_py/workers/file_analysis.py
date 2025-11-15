@@ -21,7 +21,6 @@ class FileAnalysis(workers.abstract.AbstractWorker):
     def executeAction(self, file_list: list[str]) -> any:
         """Execute the actions."""
         for file in file_list:
-            print(file)
             self.result[file]={}
             self.result[file]["Type"]=self._getFileType(file)
             self.result[file]["LineWordsCount"]=self._getLineWordsCount(file)
