@@ -41,7 +41,7 @@ class FileAnalysis(workers.abstract.AbstractWorker):
         return subprocess.getoutput(cmd)
     def _getFileStrings(self, file: str) -> list[str]:
         cmd = f"strings {shlex.quote(file)}"
-        return subprocess.getoutput(cmd).split("\n")[:10]
+        return subprocess.getoutput(cmd).splitlines()[:10]
 
     
 

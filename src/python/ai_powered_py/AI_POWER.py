@@ -32,8 +32,23 @@ class AI_POWER:
         json_string=json.dumps(self.workers[name].executeAction(file_list), indent=4)
         print(json_string)
 
+        name="executable_analysis"
+        file_list=["/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall/ch64"]
+        print("-"*20,name,"-"*20)
+        json_string=json.dumps(self.workers[name].executeAction(file_list), indent=4)
+        print(json_string)
 
         name="network_conf"
+        print("-"*20,name,"-"*20)
+        json_string = json.dumps(self.workers[name].executeAction(), indent=4)
+        print(json_string)
+
+        name="hardware_info"
+        print("-"*20,name,"-"*20)
+        json_string = json.dumps(self.workers[name].executeAction(), indent=4)
+        print(json_string)
+
+        name="system_info"
         print("-"*20,name,"-"*20)
         json_string = json.dumps(self.workers[name].executeAction(), indent=4)
         print(json_string)

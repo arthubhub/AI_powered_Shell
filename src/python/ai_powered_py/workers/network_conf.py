@@ -34,11 +34,11 @@ class NetworkConf(workers.abstract.AbstractWorker):
         return interfaces_dict
     def _getRoute(self) -> list:
         cmd=" ".join(['ip','route','show'])
-        return subprocess.getoutput(cmd).split("\n")
+        return subprocess.getoutput(cmd).splitlines()
     def _traceRoute(self) -> list:
         static_ip="8.8.8.8"
         cmd=" ".join(['traceroute', static_ip]) 
-        return subprocess.getoutput(cmd).split("\n")
+        return subprocess.getoutput(cmd).splitlines()
     
     def __runPingWithTimeout(self,host):
         try:
@@ -59,7 +59,7 @@ class NetworkConf(workers.abstract.AbstractWorker):
         hosts=["yahoo.com", "8.8.8.8"]
         for host in hosts:
             print(host)
-            ping_results["host"]=self.__runPingWithTimeout(host).split("\n")
+            ping_results["host"]=self.__runPingWithTimeout(host).splitlines()
         return ping_results
 
 
