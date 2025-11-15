@@ -59,3 +59,43 @@ Another example:
 <img width="878" height="806" alt="image" src="https://github.com/user-attachments/assets/8dc78692-fd08-44d0-a01e-1c89d9a2f4c8" />
 
 This shows that the tool works. However, some features are missing and the AI doesn't handle all the formating well.
+
+
+
+### How workers are chosen by the AI ?
+
+Here is an example of how the workers are chosen by the AI in multiple scenarios.
+
+1. "why cant i run the program ch64"
+  ```
+  [+] Valid worker : ['file_analysis', '"ch64"']
+  [+] Valid worker : ['executable_analysis', '"ch64"']
+  Here are the required workers :  {'file_analysis': ['"ch64"'], 'executable_analysis': ['"ch64"']}
+  ```
+2. "why cant i run main.py"
+  ```
+  [+] Valid worker : ['file_analysis', 'main.py']
+  Here are the required workers :  {'file_analysis': ['main.py']}
+  ```
+  But also...
+  ```
+  [+] Valid worker : ['system_info']
+  [+] Valid worker : ['file_analysis', '"/home/arthub", "/root", "/etc", "/usr", "/var", "/home", "/opt"']
+  Here are the required workers :  {'system_info': [], 'file_analysis': ['"/home/arthub"', ' "/root"', ' "/etc"', ' "/usr"', ' "/var"', ' "/home"', ' "/opt"']}
+  ```
+3. "what is the biggest file of my current directory"
+  ```
+  [+] Valid worker : ['file_analysis', 'AI_POWER.py,__init__.py,workers/executable_analysis.py,workers/file_analysis.py,workers/hardware_info.py,workers/network_conf.py,workers/system_info.py -s']
+  Here are the required workers :  {'file_analysis': ['AI_POWER.py', '__init__.py', 'workers/executable_analysis.py', 'workers/file_analysis.py', 'workers/hardware_info.py', 'workers/network_conf.py', 'workers/system_info.py -s']}
+  ```
+  But also ...
+  ```
+  [+] Valid worker : ['file_analysis', 'getBiggestFile']
+  Here are the required workers :  {'file_analysis': ['getBiggestFile']}
+  ```
+4. "why cant i reach my friend on 192.168.1.2"
+  ```
+  [+] Valid worker : ['network_conf', '1']
+  Here are the required workers :  {'network_conf': ['1']}
+  ```
+   
