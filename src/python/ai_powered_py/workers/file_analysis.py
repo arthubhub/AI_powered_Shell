@@ -22,14 +22,15 @@ class FileAnalysis(workers.abstract.AbstractWorker):
     def executeAction(self, file_list: list[str]) -> any:
         """Execute the actions."""
         for file in file_list:
-            if os.path.exists(file):
-                self.result[file] = {}
-                self.result[file]["Type"] = self._getFileType(file)
-                self.result[file]["LineWordsCount"] = self._getLineWordsCount(file)
-                self.result[file]["FilePermissions"] = self._getFilePermissions(file)
-                self.result[file]["Strings"] = self._getFileStrings(file)
-            else:
-                print(f"Warning: File '{file}' does not exist. Skipping.")
+            if not os.path.exists(file):
+                self.result[file] = {"error": f"File not found: {file}"}
+                continue
+            self.result[file] = {}
+            self.result[file]["Type"] = self._getFileType(file)
+            self.result[file]["LineWordsCount"] = self._getLineWordsCount(file)
+            self.result[file]["FilePermissions"] = self._getFilePermissions(file)
+            self.result[file]["Strings"] = self._getFileStrings(file)
+
         
         return self.result
 
