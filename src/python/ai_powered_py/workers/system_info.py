@@ -16,7 +16,7 @@ class SystemInfo(workers.abstract.AbstractWorker):
     def describeBehavior(self) -> str:
         return self.behavior
 
-    def executeAction(self, **kwargs) -> dict:
+    def executeAction(self, list=[]) -> dict:
         self.result["getOSInfo"] = self._getOSInfo()
         self.result["getKernelVersion"] = self._getKernelVersion()
         self.result["getSystemArchitecture"] = self._getSystemArchitecture()
