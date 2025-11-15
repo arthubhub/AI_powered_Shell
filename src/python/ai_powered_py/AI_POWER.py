@@ -179,28 +179,66 @@ The process is divided into three steps:
         system_prompt.append("""# Calling convetions 
 - Print the name of the worker to call
 - Put the arguments in an comma separated list
-## Good Format
+## Good Format (just example with fictive workers, apply it with actual ones)
+- You need info about the network ? just run something like that
 ```
+It seems that ...
+[WORKERS]
 fictive_worker_check_connection=127.0.0.1,8.8.8.8
-fictive_worker_get_hostname
-fictive_worker_launch_job=host1,host2
 ```
-
-## Very Wrong Format
+- You are not sure the file allow this behavior ? just run something like that
+```
+[WORKERS]
+fictive_worker_analyse_file=myfile.txt
+```                      
+- Other valid example :
 ```
 To help the user ...
 
 To find the type ... here is what we can perform:
-
+[WORKERS]
 fictive_worker_get_hostname
-```""")
+```
+## Very Wrong Format                        
+- Never use non existing workers :
+```
+[WORKERS]
+fictive_worker_analyse_file=file
+```
+- Never put worker capabilities as argument :
+```
+[WORKERS]
+fictive_worker_check_internet=getRoute
+```
+- Never put text under workers list :
+```
+[WORKERS]
+fictive_worker_check_internet=getRoute
+                             
+Here we will get ... <- WRONG
+```
+- Never put other things than given workers :
+```
+[WORKERS]
+file_analysis=main.py
+hardware_info 
+cwd, pwd <- Very bad
+system_info
+```                         
+- Never put comments :
+```
+[WORKERS]
+file_analysis="/etc/test" # To check if the file exists <- WRONG
+```                              
+""")
         system_prompt.append("""# Output format (IMPORTANT)
 - You are now in the initial step;
 - You will perform an analysis of the user request;
 - You will try to find logical problems;
 - You will print the list of workers to be called with their arguments;
+- Firstly, state what is happening
+- Then put the commands under the "[WORKERS]" bloc
 - You will use the format given in the previous section (Workers list);
-- DO NOT add text to the answer, just output workername and the list of arguments;
 - Your answer will be parsed in python , respect the required format.""")
 
 
@@ -213,19 +251,6 @@ fictive_worker_get_hostname
         self.buildDeepModePromptSystemInitStep()
         self.buildQuickModePromptUser()
         
-
-
-
-
-
-
-        
-
-
-
-
-
-
 
 
     ########################################
