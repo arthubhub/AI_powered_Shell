@@ -2,11 +2,412 @@ import importlib
 import pkgutil
 from workers.abstract import AbstractWorker
 import json
+import re
+import sys
+import subprocess
+import platform
+import os
+from datetime import datetime
+
+class Colors:
+    CYAN = '\033[0;36m'
+    BOLD = '\033[1m'
+    NC = '\033[0m'
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    RED = '\033[0;31m'
+    BLUE = '\033[0;34m'
+
+
 class AI_POWER:
-    def __init__(self):
+    def __init__(self, logs_file, mode="Q", last_command="", model="mistral"):
         self.workers = {}
+        self.logs_file=logs_file
+        self.mode=mode
+        self.last_command=last_command
+        self.ollama_model=model
+        self.logs={}
+        self.context_info={}
+        self.env_info={}
+        self.current_dir_content={}
+        self.current_system_prompt=""
+        self.current_user_prompt=""
+        
     
-    def to_markdown(self, module, data: dict) -> str:
+    def formatText(self, text):
+        text = re.sub(r'\$\{CYAN\}', Colors.CYAN, text)
+        text = re.sub(r'\$\{NC\}', Colors.NC, text)
+        text = re.sub(r'\$\{BOLD\}', Colors.BOLD, text)
+        text = re.sub(r'\$\{GREEN\}', Colors.GREEN, text)
+        text = re.sub(r'\$\{YELLOW\}', Colors.YELLOW, text)
+        text = re.sub(r'\$\{RED\}', Colors.RED, text)
+        text = re.sub(r'\$\{BLUE\}', Colors.BLUE, text)
+        
+        text = re.sub(r'\{CYAN\}', Colors.CYAN, text)
+        text = re.sub(r'\{NC\}', Colors.NC, text)
+        text = re.sub(r'\{BOLD\}', Colors.BOLD, text)
+        text = re.sub(r'\{GREEN\}', Colors.GREEN, text)
+        text = re.sub(r'\{YELLOW\}', Colors.YELLOW, text)
+        text = re.sub(r'\{RED\}', Colors.RED, text)
+        text = re.sub(r'\{BLUE\}', Colors.BLUE, text)
+        
+        return text
+    
+    def formatMdToShell(self, text):
+        newstring = re.sub(r'```[^\n]*\n([^```]*)```', r'{BLUE}\1{NC}', text)
+        newstring = re.sub(r'`([^`]*)`', r'{CYAN}\1{NC}', newstring)
+
+        newstring = re.sub(r'\*\*(.*?)\*\*', r'{BOLD}\1{NC}', newstring)
+        newstring = re.sub(r'\*(.*?)\*', r'{RED}\1{NC}', newstring)
+
+        return newstring
+
+
+
+
+    def printHeader(self,text):
+        """Print a formatted header"""
+        width = 80
+        print(f"\n{Colors.CYAN}{'=' * width}{Colors.NC}")
+        print(f"{Colors.BOLD}{text.center(width)}{Colors.NC}")
+        print(f"{Colors.CYAN}{'=' * width}{Colors.NC}\n")
+
+    ###################################
+    # The following methods are used to 
+    # build the prompts.
+    ###################################
+
+    def buildQuickModePromptUser(self):
+        self.current_user_prompt=""
+        user_prompt=["BEGIN USER PROMPT]"]
+        user_prompt.append("""# Important
+Using the "SYSTEM INDICATIONS", you will analyse the context in the following sections, and find the problem stated by the user.
+You will see the following sections:
+1. User machine context.
+2. Previous commands and results.
+3. Environment information.
+4. Current directory content
+5. Problem faced by the user.""")
+        user_prompt.append("""# Host information""")
+        user_prompt.append(self.toMarkdown("User machine context",self.context_info))
+        user_prompt.append("## Previous commands and results")
+        user_prompt.append(self.getCommandHistory())
+        user_prompt.append(self.toMarkdown("Environment information",self.env_info))
+        user_prompt.append(self.toMarkdown("Current directory content",self.current_dir_content))
+        user_prompt.append("# User Prompt")
+        user_prompt.append(f"Here is the last command of the user. Consider it as a failed command, or as its question : `{self.last_command}`")
+        user_prompt.append("[END USER PROMPT]")
+
+        self.current_user_prompt="\n".join(user_prompt)
+        
+
+
+
+    def buildQuickModePromptSystem(self):
+        self.current_system_prompt=""
+        self.current_system_prompt="""[BEGIN SYSTEM INDICATIONS]
+# Context
+- You are a command-line assistant;
+- You are called by the user in its shell;
+- You have to use context about user env to solve its problem.
+
+# Rules
+1. **Only use the provided context and command.** Never invent, assume, or reference files/commands not mentioned in the context.
+2. **Be concise:** One-line summary, followed by a short list of actionable solutions.
+3. **If the context is unclear or missing, ask for clarification. Do NOT guess.**
+4. **Focus on the logic** Use context and find real logical problems.
+
+# Answer structure
+1. Begin by resuming the context.
+2. State the problem of the situation, show what part is wrong.
+3. Give short advices, and command to run.
+4. Give advice to better understand the situation.
+
+# Answer format
+1. Put small commands between `command`
+2. Put command blocs between ```bloc```
+3. Make important words strong with **bold**
+4. If the user make a typo mistake, put the sample in italic, between single stars, and not backsticks.
+[END SYSTEM INDICATIONS]"""
+
+
+
+    def buildQuickModePrompt(self):
+        self.buildQuickModePromptSystem()
+        self.buildQuickModePromptUser()
+
+
+
+
+    def buildDeepModePromptSystemInitStep(self):
+        self.current_system_prompt=""
+        system_prompt=["[BEGIN SYSTEM INDICATIONS]"]
+        system_prompt.append("""# Context
+- You are a command-line assistant;
+- You are called by the user in its shell;
+- You have to use context about user env to solve its problem;
+- you are currently in the `Initial prompt` step.
+
+# Process
+The process is divided into three steps:
+1. Initial prompt
+2. Workers actions
+3. Final prompt
+
+## Initial prompt
+- During this step, the user context will be provided. 
+- Then you will receive a list of possible actions.
+- You will decide which actions to perform.
+- You will follow the syntax indications for the answer.
+
+## Workers actions
+- The workers will be called according to your requirements.
+- They will get additional context for you.
+- Worker actions just give you information about what the worker does.
+
+## Final prompt
+- During this step, you will analyse the context provided by the worker.
+- You will follow the instructions.
+- You will bring your help to solve the problem.
+
+# Workers list""")
+        for key,attr in self.workers.items():
+            system_prompt.append(f"## '{key}'")
+            system_prompt.append(f"- Behavior: {attr.describeBehavior()}")
+            system_prompt.append(f"- Worker actions: {attr.getPossibleActions()}")
+
+        system_prompt.append("""# Calling convetions 
+- Print the name of the worker to call
+- Put the arguments in an comma separated list
+## Good Format
+```
+fictive_worker_check_connection=127.0.0.1,8.8.8.8
+fictive_worker_get_hostname
+fictive_worker_launch_job=host1,host2
+```
+
+## Very Wrong Format
+```
+To help the user ...
+
+To find the type ... here is what we can perform:
+
+fictive_worker_get_hostname
+```""")
+        system_prompt.append("""# Output format (IMPORTANT)
+- You are now in the initial step;
+- You will perform an analysis of the user request;
+- You will try to find logical problems;
+- You will print the list of workers to be called with their arguments;
+- You will use the format given in the previous section (Workers list);
+- DO NOT add text to the answer, just output workername and the list of arguments;
+- Your answer will be parsed in python , respect the required format.""")
+
+
+        system_prompt.append("[END SYSTEM INDICATIONS]")
+        self.current_system_prompt="\n".join(system_prompt)
+
+
+
+    def buildDeepModePrompt(self):
+        self.buildDeepModePromptSystemInitStep()
+        self.buildQuickModePromptUser()
+        
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+    ########################################
+    # The following methods are used to give 
+    # a quick overview of context to the AI.
+    ########################################
+
+    def getCommandHistory(self):
+        history_items = list(self.logs.get('command_history', {}).items())
+        # Skip first command (usually the cat of json file itself) and get last 10
+        recent_commands = history_items[-11:-1] if len(history_items) > 11 else history_items[:-1] if len(history_items) > 1 else []
+        command_history_md=""
+        if not recent_commands:
+            command_history_md += "*No command history available*\n"
+        else:
+            for idx, (timestamp, data) in enumerate(recent_commands, 1):
+                command_content = data.get('command', {}).get('content', 'N/A')
+                result_content = data.get('result', {}).get('content', '')
+                
+                command_history_md += f"### {idx}. [{timestamp}]\n"
+                command_history_md += f"**Command:** `{command_content}`\n"
+                
+                if result_content:
+                    truncated_result = result_content[:500] + "..." if len(result_content) > 500 else result_content
+                    command_history_md += f"**Output:**\n```\n{truncated_result}\n```\n"
+                else:
+                    command_history_md += "**Output:** *(no output captured yet)*\n"
+        return command_history_md
+
+
+
+    def loadJsonLogs(self):
+        try:
+            with open(self.logs_file, 'r') as f:
+                self.logs = json.load(f)
+        except FileNotFoundError:
+            print(f"{Colors.RED}Error: File '{self.logs_file}' not found.{Colors.NC}", file=sys.stderr)
+            sys.exit(1)
+        except json.JSONDecodeError as e:
+            print(f"{Colors.RED}Error: Invalid JSON in '{self.logs_file}': {e}{Colors.NC}", file=sys.stderr)
+            sys.exit(1)
+
+    def getEnvInfo(self):
+        for key in ['PATH', 'HOME', 'SHELL', 'LANG', 'TERM']:
+            value = os.environ.get(key, 'N/A')
+            if key == 'PATH' and len(value) > 200:
+                value = value[:200] + "..."
+            self.env_info[key]=value
+
+    def getOSAndPackageManager(self):
+        try:
+            with open('/etc/os-release', 'r') as f:
+                os_release = f.read().splitlines()[0] # -> NAME="Arch Linux"
+                self.context_info['distro']=os_release
+                
+        except FileNotFoundError:
+            pass
+        
+        for packagemanager in ['pacman', 'apt', 'apt-get', 'dnf', 'yum', 'zypper']:
+            if subprocess.run(['which', packagemanager], capture_output=True).returncode == 0:
+                self.context_info['package_manager'] = packagemanager
+                if packagemanager == 'pacman':
+                    self.context_info['package_install_command'] = f'sudo {packagemanager} -S'
+                elif packagemanager in ['apt', 'apt-get']:
+                    self.context_info['package_install_command'] = f'sudo {packagemanager} install'
+                elif packagemanager in ['dnf', 'yum']:
+                    self.context_info['package_install_command'] = f'sudo {packagemanager} install'
+                elif packagemanager == 'zypper':
+                    self.context_info['package_install_command'] = f'sudo {packagemanager} install'
+                break
+    def getSystemInfo(self):
+        self.context_info['cwd']=os.getcwd()
+        self.context_info['shell']=os.environ.get('SHELL', 'unknown')
+        self.context_info['user']=os.environ.get('USER', 'unknown')
+        self.context_info['os']=f"{platform.system()} {platform.release()}"
+        self.context_info['machine']=platform.machine()
+        self.context_info['python_version']=platform.python_version()
+        self.context_info['date']=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    def getDirectoryContent(self,path='.'):
+        try:
+            self.current_dir_content[os.path.abspath(path)]=subprocess.run(
+                ['ls', '-la', path],
+                capture_output=True,
+                text=True,
+                timeout=2
+            ).stdout.splitlines()
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return "Listing failed"
+
+    def loadContext(self):
+        self.getOSAndPackageManager()
+        self.getSystemInfo()
+        self.getDirectoryContent()
+        self.getEnvInfo()
+
+
+    ############################################
+    # Functions to be called by the main program
+    ############################################
+
+    def buildObject(self): # <- called by the main program
+        self.loadWorkers()
+        self.loadJsonLogs()
+        self.loadContext()
+    
+    def runModel(self): # <- called by the main program
+        if self.mode=="Q":
+            self.quickModel()
+        else:
+            self.deepModel()
+            
+
+
+    ###############################################
+    # The following methods handles ai interactions
+    ###############################################
+
+
+    def quickModel(self):
+        self.buildQuickModePrompt()
+        print(f"\n{Colors.YELLOW}...{Colors.NC} Calling Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
+        ollama_answer=self.callOllama()
+        formatted_to_shell_response = self.formatMdToShell(ollama_answer)
+        formatted_response = self.formatText(formatted_to_shell_response)
+
+        self.printHeader("OLLAMA RESPONSE")
+        print(formatted_response)
+        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+
+    def deepModel(self):
+        print("Deep Model")
+        self.buildDeepModePrompt()
+        print(f"\n{Colors.YELLOW}...{Colors.NC} Calling Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
+        ollama_answer=self.callOllama()
+        formatted_to_shell_response = self.formatMdToShell(ollama_answer)
+        formatted_response = self.formatText(formatted_to_shell_response)
+
+        self.printHeader("OLLAMA RESPONSE")
+        print(formatted_response)
+        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+
+
+    #####################################################
+    # The following methods handle connection with ollama
+    #####################################################
+    def callOllama(self):
+        try:
+            import ollama
+        except ImportError:
+            print(f"{Colors.RED}Error: 'ollama' Python package is not installed.{Colors.NC}", file=sys.stderr)
+            print(f"{Colors.YELLOW}Install it with: pip install ollama{Colors.NC}", file=sys.stderr)
+            sys.exit(1)
+
+        
+        try:
+            response = ollama.chat(
+                model=self.ollama_model,
+                messages=[
+                    {
+                        'role': 'system',
+                        'content': self.current_system_prompt
+                    },
+                    {
+                        'role': 'user',
+                        'content': self.current_user_prompt
+                    }
+                ]
+            )
+            return response['message']['content']
+        
+        except Exception as e:
+            print(f"{Colors.RED}Error calling Ollama: {e}{Colors.NC}", file=sys.stderr)
+            print(f"{Colors.YELLOW}Make sure Ollama is running with: ollama serve{Colors.NC}", file=sys.stderr)
+            sys.exit(1)
+
+
+
+
+    ####################################################
+    # The following methods perform actions with workers
+    ####################################################
+    def toMarkdown(self, module, data: dict) -> str:
 
         markdown = f"## {module}\n"
         for key, elem in data.items():
@@ -31,14 +432,15 @@ class AI_POWER:
         return markdown
 
     def loadWorkers(self):
-        excludelist=["abstract"]
-        for _, name, _ in pkgutil.iter_modules(['workers']):
-            if name not in excludelist:
-                module = importlib.import_module(f"workers.{name}")
-                for attribute in dir(module):
-                    attr = getattr(module, attribute)
-                    if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker :
-                        self.workers[name]=attr()
+        if self.workers=={}:
+            excludelist=["abstract"]
+            for _, name, _ in pkgutil.iter_modules(['workers']):
+                if name not in excludelist:
+                    module = importlib.import_module(f"workers.{name}")
+                    for attribute in dir(module):
+                        attr = getattr(module, attribute)
+                        if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker :
+                            self.workers[name]=attr()
     
     def describeWorkers(self):
         print("Loading modules ...")
@@ -83,9 +485,15 @@ class AI_POWER:
 
 if __name__=="__main__":
     print("Debugging")
-    my_ai=AI_POWER()
-    my_ai.loadWorkers()
-    my_ai.describeWorkers()
-    my_ai.getWorkersPossibleActions()
-    my_ai.runWorkers()
+    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run the program ch64")
+    print("Building the object...")
+    my_ai.buildObject()
+    print("Running the quick model...")
+    my_ai.runModel()
+
+    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run main.py")
+    print("Building the object...")
+    my_ai.buildObject()
+    print("Running the quick model...")
+    my_ai.runModel()
         

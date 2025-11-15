@@ -6,7 +6,8 @@ import json
 class NetworkConf(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions=["getInterfaces", "getRoute", "traceRoute", "pingInternet"]
-        self.behavior="No args need to be gien to this caller. It returns information about network status."
+        self.behavior="Returns information about network status.\
+            argument format : no arguments"
         self.result={}
     def getPossibleActions(self) -> list[str]:
         """Return a list of actions this worker performs."""

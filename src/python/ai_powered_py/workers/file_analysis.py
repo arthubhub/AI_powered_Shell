@@ -8,7 +8,8 @@ import shlex
 class FileAnalysis(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions=["getFileType", "getLineWordsCount", "getFilePermissions", "getFileStrings"]
-        self.behavior="When calling this worker, give a list of files in the following format : [\"file1\", \"dir1/file2\", ... ]\n It will return information about given files."
+        self.behavior="When calling this worker, give a list of files and it will return information about given files.\
+            argument format : worker_name=\"file1\", \"dir/file2\", ..."
         self.result={}
     def getPossibleActions(self) -> list[str]:
         """Return a list of actions this worker performs."""

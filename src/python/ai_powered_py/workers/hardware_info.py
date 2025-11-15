@@ -6,7 +6,8 @@ import workers.abstract
 class HardwareInfos(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions = ["getCPUInfo", "getRAMInfo", "getGPUInfo", "getStorageInfo"]
-        self.behavior = "No args needed. Returns hardware information."
+        self.behavior = "Returns hardware information.\
+            argument format : no argument"
         self.result = {}
 
     def getPossibleActions(self) -> list[str]:

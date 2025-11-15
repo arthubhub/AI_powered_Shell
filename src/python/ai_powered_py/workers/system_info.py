@@ -6,7 +6,8 @@ import workers.abstract
 class SystemInfo(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions = ["getOSInfo", "getKernelVersion", "getSystemArchitecture", "getEnvironmentVariables"]
-        self.behavior = "No args needed. Returns system information."
+        self.behavior = "Returns system information.\
+            argument format : no arguments"
         self.result = {}
 
     def getPossibleActions(self) -> list[str]:
