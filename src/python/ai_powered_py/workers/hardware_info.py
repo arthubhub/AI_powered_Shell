@@ -16,7 +16,7 @@ class HardwareInfos(workers.abstract.AbstractWorker):
     def describeBehavior(self) -> str:
         return self.behavior
 
-    def executeAction(self) -> dict:
+    def executeAction(self, **kwargs) -> dict:
         self.result["getCPUInfo"] = self._getCPUInfo()
         self.result["getRAMInfo"] = self._getRAMInfo()
         self.result["getGPUInfo"] = self._getGPUInfo()

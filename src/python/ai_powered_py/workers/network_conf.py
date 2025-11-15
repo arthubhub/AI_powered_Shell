@@ -17,7 +17,7 @@ class NetworkConf(workers.abstract.AbstractWorker):
         """Return a description of how to call worker."""
         return self.behavior
 
-    def executeAction(self) -> any:
+    def executeAction(self, **kwargs) -> any:
         """Execute the actions."""
         self.result["getInterfaces"]=self._getInterfaces()
         self.result["getRoute"]=self._getRoute()

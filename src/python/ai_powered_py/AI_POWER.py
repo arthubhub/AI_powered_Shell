@@ -32,6 +32,8 @@ class AI_POWER:
         self.current_dir_content={}
         self.current_system_prompt=""
         self.current_user_prompt=""
+        self.required_workers={}
+        self.workers_output_md=""
         
     
     def formatText(self, text):
@@ -62,7 +64,29 @@ class AI_POWER:
 
         return newstring
 
+    def toMarkdown(self, module, data: dict) -> str:
 
+        markdown = f"## {module}\n"
+        for key, elem in data.items():
+            markdown += f"- **{key}:**\n"
+            if isinstance(elem, str):
+                markdown += f"  `{elem}`\n"
+            elif isinstance(elem, list):
+                markdown += "  ```\n"
+                for val in elem:
+                    markdown += f"  {val}\n"
+                markdown += "  ```\n"
+            elif isinstance(elem, dict):
+                markdown += "  ```\n"
+                for dict_key, dict_val in elem.items():
+                    if isinstance(dict_val, dict):
+                        markdown += f"  {dict_key}:\n"
+                        for sub_key, sub_val in dict_val.items():
+                            markdown += f"    - {sub_key}: `{sub_val}`\n"
+                    else:
+                        markdown += f"  {dict_key}: `{dict_val}`\n"
+                markdown += "  ```\n"
+        return markdown
 
 
     def printHeader(self,text):
@@ -210,19 +234,12 @@ fictive_worker_analyse_file=file
 [WORKERS]
 fictive_worker_check_internet=getRoute
 ```
-- Never put text under workers list :
-```
-[WORKERS]
-fictive_worker_check_internet=getRoute
-                             
-Here we will get ... <- WRONG
-```
 - Never put other things than given workers :
 ```
 [WORKERS]
 file_analysis=main.py
 hardware_info 
-cwd, pwd <- Very bad
+cwd, pwd <- VERY VERY BAD
 system_info
 ```                         
 - Never put comments :
@@ -384,13 +401,10 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
         print("Deep Model")
         self.buildDeepModePrompt()
         print(f"\n{Colors.YELLOW}...{Colors.NC} Calling Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
-        ollama_answer=self.callOllama()
-        formatted_to_shell_response = self.formatMdToShell(ollama_answer)
-        formatted_response = self.formatText(formatted_to_shell_response)
+        self.getRequiredWorkers(self.callOllama())
+        self.runWorkers()
 
-        self.printHeader("OLLAMA RESPONSE")
-        print(formatted_response)
-        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+
 
 
     #####################################################
@@ -433,29 +447,32 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
     ####################################################
     # The following methods perform actions with workers
     ####################################################
-    def toMarkdown(self, module, data: dict) -> str:
+    def getRequiredWorkers(self,ollama_answer):
+        if "[WORKERS]" not in ollama_answer:
+            print(f"{Colors.RED}Error: 'ollama' didn't give any worker.{Colors.NC}", file=sys.stderr)
+            sys.exit(1)
+        worker_list={}
 
-        markdown = f"## {module}\n"
-        for key, elem in data.items():
-            markdown += f"- **{key}:**\n"
-            if isinstance(elem, str):
-                markdown += f"  `{elem}`\n"
-            elif isinstance(elem, list):
-                markdown += "  ```\n"
-                for val in elem:
-                    markdown += f"  {val}\n"
-                markdown += "  ```\n"
-            elif isinstance(elem, dict):
-                markdown += "  ```\n"
-                for dict_key, dict_val in elem.items():
-                    if isinstance(dict_val, dict):
-                        markdown += f"  {dict_key}:\n"
-                        for sub_key, sub_val in dict_val.items():
-                            markdown += f"    - {sub_key}: `{sub_val}`\n"
-                    else:
-                        markdown += f"  {dict_key}: `{dict_val}`\n"
-                markdown += "  ```\n"
-        return markdown
+        worker_blocs=ollama_answer.split("[WORKERS]\n")[1:] # <- we get all blocs beginning with [WORKERS]\n 
+        for worker_bloc in worker_blocs:
+            i=0
+            worker_bloc_lines=worker_bloc.splitlines()
+            if len(worker_bloc_lines)>0:
+                curr_worker=worker_bloc_lines[i].split("=")
+                curr_worker_name=curr_worker[0].strip()
+                while i<len(worker_bloc_lines) and curr_worker_name in self.workers.keys():
+                    print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
+                    worker_list[curr_worker_name]=[]
+                    if len(curr_worker)>1:
+                        worker_list[curr_worker_name]=curr_worker[1].split(",")
+                    i+=1
+                    if i<len(worker_bloc_lines):
+                        curr_worker=worker_bloc_lines[i].split("=")
+                        curr_worker_name=curr_worker[0].strip()
+        
+        print("Here are the required workers : ", worker_list)
+        self.required_workers=worker_list
+
 
     def loadWorkers(self):
         if self.workers=={}:
@@ -477,30 +494,39 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
     def getWorkersPossibleActions(self):
         for key,attr in self.workers.items():
             print(key, " -> ", attr.getPossibleActions())
+
     def runWorkers(self):
+        markdown=[]
+        for name, args in self.required_workers.items():
+            markdown.append(self.toMarkdown(name,self.workers[name].executeAction(args)))
+        self.workers_output_md="\n".join(markdown)
+        print(self.workers_output_md)
+
+    
+    def runWorkersExample(self):
         name="file_analysis"
         file_list=["../../../install.sh","/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall/ch64"]
-        markdown=self.to_markdown(name,self.workers[name].executeAction(file_list))
+        markdown=self.toMarkdown(name,self.workers[name].executeAction(file_list))
         print(markdown)
 
         name="executable_analysis"
         file_list=["/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall/ch64"]
-        markdown=self.to_markdown(name,self.workers[name].executeAction(file_list))
+        markdown=self.toMarkdown(name,self.workers[name].executeAction(file_list))
         print(markdown)
 
 
         name="network_conf"
-        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        markdown=self.toMarkdown(name,self.workers[name].executeAction())
         print(markdown)
 
 
         name="hardware_info"
-        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        markdown=self.toMarkdown(name,self.workers[name].executeAction())
         print(markdown)
 
 
         name="system_info"
-        markdown=self.to_markdown(name,self.workers[name].executeAction())
+        markdown=self.toMarkdown(name,self.workers[name].executeAction())
         print(markdown)
 
         
@@ -511,13 +537,25 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
 if __name__=="__main__":
     print("Debugging")
-    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run the program ch64")
+    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run the program /home/arthub/Downloads/ch64")
     print("Building the object...")
     my_ai.buildObject()
     print("Running the quick model...")
     my_ai.runModel()
 
     my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run main.py")
+    print("Building the object...")
+    my_ai.buildObject()
+    print("Running the quick model...")
+    my_ai.runModel()
+
+    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","what is the biggest file of my current directory")
+    print("Building the object...")
+    my_ai.buildObject()
+    print("Running the quick model...")
+    my_ai.runModel()
+
+    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i reach my friend on 192.168.1.2")
     print("Building the object...")
     my_ai.buildObject()
     print("Running the quick model...")

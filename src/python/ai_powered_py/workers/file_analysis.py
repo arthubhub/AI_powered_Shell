@@ -2,7 +2,7 @@ import workers.abstract
 import magic # magic bytes
 import subprocess
 import shlex
-
+import os
 
 
 class FileAnalysis(workers.abstract.AbstractWorker):
@@ -22,11 +22,14 @@ class FileAnalysis(workers.abstract.AbstractWorker):
     def executeAction(self, file_list: list[str]) -> any:
         """Execute the actions."""
         for file in file_list:
-            self.result[file]={}
-            self.result[file]["Type"]=self._getFileType(file)
-            self.result[file]["LineWordsCount"]=self._getLineWordsCount(file)
-            self.result[file]["FilePermissions"]=self._getFilePermissions(file)
-            self.result[file]["Strings"]=self._getFileStrings(file)
+            if os.path.exists(file):
+                self.result[file] = {}
+                self.result[file]["Type"] = self._getFileType(file)
+                self.result[file]["LineWordsCount"] = self._getLineWordsCount(file)
+                self.result[file]["FilePermissions"] = self._getFilePermissions(file)
+                self.result[file]["Strings"] = self._getFileStrings(file)
+            else:
+                print(f"Warning: File '{file}' does not exist. Skipping.")
         
         return self.result
 
