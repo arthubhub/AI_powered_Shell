@@ -20,7 +20,8 @@ class Colors:
 
 
 class AI_POWER:
-    def __init__(self, logs_file, mode="Q", last_command="", model="mistral"):
+    def __init__(self, logs_file, mode="Q", last_command="", model="mistral", debug=0):
+        self.DEBUG=debug
         self.workers = {}
         self.logs_file=logs_file
         self.mode=mode
@@ -161,7 +162,57 @@ You will see the following sections:
         self.buildQuickModePromptUser()
 
 
+    def buildDeepModePromptSystemFinalStep(self):
+        self.current_system_prompt=""
+        self.current_system_prompt="""[BEGIN SYSTEM INDICATIONS]
+# Context
+- You are a command-line assistant;
+- You are called by the user in its shell;
+- You have to use context about user env to solve its problem.
 
+# Rules
+1. **Only use the provided context and command.** Never invent, assume, or reference files/commands not mentioned in the context.
+2. **Be concise:** One-line summary, followed by a short list of actionable solutions.
+3. **If the context is unclear or missing, ask for clarification. Do NOT guess.**
+4. **Focus on the logic** Use context and find real logical problems.
+
+# Answer structure
+1. Begin by resuming the context.
+2. State the problem of the situation, from the "User Prompt" section.
+3. Explain what you can see from "Workers Results" section.
+3. Give short advices, and command to run.
+4. Give advice to better understand the situation.
+
+# Answer format
+1. Put small commands between `command`
+2. Put command blocs between ```bloc```
+3. Make important words strong with **bold**
+[END SYSTEM INDICATIONS]"""
+    def buildDeepModePromptUserFinalStep(self):
+        self.current_user_prompt=""
+        user_prompt=["[BEGIN USER PROMPT]"]
+        user_prompt.append("""# Important
+Using the "SYSTEM INDICATIONS", you will analyse the context in the following sections, and find the problem stated by the user.
+You will see the following sections:
+1. User machine context.
+2. Previous commands and results.
+3. Environment information.
+4. Current directory content
+5. Workers Results
+6. Problem faced by the user.""")
+        user_prompt.append("""# Host information""")
+        user_prompt.append(self.toMarkdown("User machine context",self.context_info))
+        user_prompt.append("## Previous commands and results")
+        user_prompt.append(self.getCommandHistory())
+        user_prompt.append(self.toMarkdown("Environment information",self.env_info))
+        user_prompt.append(self.toMarkdown("Current directory content",self.current_dir_content))
+        user_prompt.append("# Workers Results")
+        user_prompt.append(self.workers_output_md)
+        user_prompt.append("# User Prompt <- that is where you find your mission")
+        user_prompt.append(f"IMPORTANT : Here is the last command of the user, it is your mission. Consider it as a failed command, or as its question : **`{self.last_command}`**")
+        user_prompt.append("[END USER PROMPT]")
+
+        self.current_user_prompt="\n".join(user_prompt)
 
     def buildDeepModePromptSystemInitStep(self):
         self.current_system_prompt=""
@@ -264,10 +315,14 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
 
 
-    def buildDeepModePrompt(self):
+    def buildDeepModeInitialPrompt(self):
         self.buildDeepModePromptSystemInitStep()
         self.buildQuickModePromptUser()
-        
+    def buildDeepModeFinalPrompt(self):
+        self.buildDeepModePromptSystemFinalStep()
+        self.buildDeepModePromptUserFinalStep()
+    
+
 
 
     ########################################
@@ -399,11 +454,12 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
     def deepModel(self):
         print("Deep Model")
-        self.buildDeepModePrompt()
+
+        # Step1 : Initial prompt        
+        self.buildDeepModeInitialPrompt()
         print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 1{Colors.NC}: Requesting for the workers using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
-        
         ollama_answer=self.callOllama()
-        if 1:
+        if self.DEBUG:
             formatted_to_shell_response = self.formatMdToShell(ollama_answer)
             formatted_response = self.formatText(formatted_to_shell_response)
 
@@ -411,17 +467,18 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
             print(formatted_response)
             print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
 
+        # Step2 : Workers
         self.getRequiredWorkers(ollama_answer)
-
-
         print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers : {self.required_workers.keys()}...\n")
         self.runWorkers()
-        self.buildQuickModePrompt()
-        self.current_user_prompt+="\n# Workers Results\n"+self.workers_output_md
 
-        print("-"*20+"FINAL REQUEST"+"-"*20)
-        print(self.current_user_prompt)
-        print("-"*50)
+
+        # Step3 : Final prompt with workers results
+        self.buildDeepModeFinalPrompt()
+        if self.DEBUG:
+            print("-"*20+"FINAL REQUEST"+"-"*20)
+            print(self.current_user_prompt)
+            print("-"*50)
         print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 3{Colors.NC}: Final AI request using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
         ollama_answer=self.callOllama()
         formatted_to_shell_response = self.formatMdToShell(ollama_answer)
@@ -489,7 +546,8 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
                 curr_worker=worker_bloc_lines[i].split("=")
                 curr_worker_name=curr_worker[0].strip()
                 while i<len(worker_bloc_lines) and curr_worker_name in self.workers.keys():
-                    print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
+                    if self.DEBUG:
+                        print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
                     worker_list[curr_worker_name]=[]
                     if len(curr_worker)>1:
                         worker_list[curr_worker_name]=curr_worker[1].split(",")
@@ -498,7 +556,6 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
                         curr_worker=worker_bloc_lines[i].split("=")
                         curr_worker_name=curr_worker[0].strip()
         
-        print("Here are the required workers : ", worker_list)
         self.required_workers=worker_list
 
 
@@ -565,27 +622,14 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
 if __name__=="__main__":
     print("Debugging")
-    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run the program /home/arthub/Downloads/ch64")
-    print("Building the object...")
-    my_ai.buildObject()
-    print("Running the quick model...")
-    my_ai.runModel()
+    logs_file="/tmp/ai_powered_shell_arthub.json"
+    test_prompts=["why cant i run the program /home/arthub/Downloads/ch64",
+                  "why cant i run main.py",
+                  "what is the biggest file of my current directory",
+                  "why cant i reach my friend on 192.168.1.2"]
 
-    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i run main.py")
-    print("Building the object...")
-    my_ai.buildObject()
-    print("Running the quick model...")
-    my_ai.runModel()
-
-    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","what is the biggest file of my current directory")
-    print("Building the object...")
-    my_ai.buildObject()
-    print("Running the quick model...")
-    my_ai.runModel()
-
-    my_ai=AI_POWER("/tmp/ai_powered_shell_arthub.json","D","why cant i reach my friend on 192.168.1.2")
-    print("Building the object...")
-    my_ai.buildObject()
-    print("Running the quick model...")
-    my_ai.runModel()
+    for prompt in test_prompts:
+        my_ai=AI_POWER(logs_file,"D",prompt,debug=1)
+        my_ai.buildObject()
+        my_ai.runModel()
         
