@@ -564,7 +564,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
                 for i in range(len(worker_bloc_lines)):
                     curr_worker=worker_bloc_lines[i].split("=")
                     curr_worker_name=curr_worker[0].strip()
-                    print("curr worker name : ",curr_worker_name)
+                    #print("curr worker name : ",curr_worker_name)
                     if curr_worker_name in self.workers.keys():
                         if self.DEBUG:
                             print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
@@ -586,8 +586,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
             parent_dir = os.path.dirname(current_dir)
             workers_path = os.path.join(parent_dir, 'workers')
             
-            print(f"Looking for workers in: {workers_path}")
-            
+            #print(f"Looking for workers in: {workers_path}")
             for _, name, _ in pkgutil.iter_modules([workers_path]):
                 print(f"Found worker module: {name}")
                 if name not in excludelist:
@@ -596,8 +595,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
                         attr = getattr(module, attribute)
                         if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker:
                             self.workers[name] = attr()
-            
-            print(f"Loaded workers: {self.workers}")
+            #print(f"Loaded workers: {self.workers}")
             
             
                 
