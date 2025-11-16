@@ -588,7 +588,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
             
             #print(f"Looking for workers in: {workers_path}")
             for _, name, _ in pkgutil.iter_modules([workers_path]):
-                print(f"Found worker module: {name}")
+                #print(f"Found worker module: {name}")
                 if name not in excludelist:
                     module = importlib.import_module(f"workers.{name}")
                     for attribute in dir(module):
