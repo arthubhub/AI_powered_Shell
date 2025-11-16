@@ -1,6 +1,6 @@
 import importlib
 import pkgutil
-from workers.abstract import AbstractWorker
+from ai_powered_py.workers.abstract import AbstractWorker
 import json
 import re
 import sys

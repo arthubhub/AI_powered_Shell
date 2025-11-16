@@ -81,8 +81,9 @@ check_ollama_running() {
 ollama_interaction() {
     local prompt="$1"
     local mode="${2:-quick}"  # quick or reflexion
+    local debug="0"
     
-    python3 "${AI_POWERED_SHELL_PATH}/python/python_md.py" "$LOGS_JSON" "$prompt"
+    python3 "${AI_POWERED_SHELL_PATH}/python/main.py" --logs_file "$LOGS_JSON" --mode "${mode}" --last_command "$prompt" --debug "${debug}"
 
 }
 
