@@ -558,21 +558,23 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
         worker_blocs=ollama_answer.split("[WORKERS]\n")[1:] # <- we get all blocs beginning with [WORKERS]\n 
         for worker_bloc in worker_blocs:
-            i=0
+
             worker_bloc_lines=worker_bloc.splitlines()
             if len(worker_bloc_lines)>0:
-                curr_worker=worker_bloc_lines[i].split("=")
-                curr_worker_name=curr_worker[0].strip()
-                while i<len(worker_bloc_lines) and curr_worker_name in self.workers.keys():
-                    if self.DEBUG:
-                        print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
-                    worker_list[curr_worker_name]=[]
-                    if len(curr_worker)>1:
-                        worker_list[curr_worker_name]=curr_worker[1].split(",")
-                    i+=1
-                    if i<len(worker_bloc_lines):
-                        curr_worker=worker_bloc_lines[i].split("=")
-                        curr_worker_name=curr_worker[0].strip()
+                for i in range(len(worker_bloc_lines)):
+                    curr_worker=worker_bloc_lines[i].split("=")
+                    curr_worker_name=curr_worker[0].strip()
+                    print("curr worker name : ",curr_worker_name)
+                    if curr_worker_name in self.workers.keys():
+                        if self.DEBUG:
+                            print(f"{Colors.GREEN}[+]{Colors.NC} Valid worker : {curr_worker}")
+                        worker_list[curr_worker_name]=[]
+                        if len(curr_worker)>1:
+                            worker_list[curr_worker_name]=curr_worker[1].split(",")
+                        i+=1
+                        if i<len(worker_bloc_lines):
+                            curr_worker=worker_bloc_lines[i].split("=")
+                            curr_worker_name=curr_worker[0].strip()
         
         self.required_workers=worker_list
 
@@ -587,6 +589,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
                         attr = getattr(module, attribute)
                         if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker :
                             self.workers[name]=attr()
+
     
     def describeWorkers(self):
         print("Loading modules ...")
