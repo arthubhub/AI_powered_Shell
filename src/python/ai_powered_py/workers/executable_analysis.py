@@ -16,7 +16,7 @@ class ExecutableAnalysis(workers.abstract.AbstractWorker):
             "getDisassembly"
         ]
         self.behavior = (
-            "Give a list of executable files and it will returns static analysis information about the executables.\
+            "Give a list of executable files and it will returns static analysis information about the executables. Please give the fullpath.\
                 argument format : worker_name=\"file1\", \"dir/file2\", ..."
         )
         self.result = {}

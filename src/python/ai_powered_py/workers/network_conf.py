@@ -58,7 +58,7 @@ class NetworkConf(workers.abstract.AbstractWorker):
         ping_results={}
         hosts=["yahoo.com", "8.8.8.8"]
         for host in hosts:
-            ping_results["host"]=self.__runPingWithTimeout(host).splitlines()
+            ping_results[host]=self.__runPingWithTimeout(host).splitlines()
         return ping_results
 
 

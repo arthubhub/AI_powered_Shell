@@ -34,6 +34,7 @@ class FileAnalysis(workers.abstract.AbstractWorker):
                 continue
             if not os.path.isfile(cleaned_filename):
                 self.result[cleaned_filename] = {"error": f"Not a file: {cleaned_filename}"}
+                continue
             self.result[cleaned_filename] = {}
             self.result[cleaned_filename]["Type"] = self._getFileType(cleaned_filename)
             self.result[cleaned_filename]["LineWordsCount"] = self._getLineWordsCount(cleaned_filename)

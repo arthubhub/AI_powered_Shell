@@ -91,11 +91,20 @@ class AI_POWER:
 
 
     def printHeader(self,text):
-        """Print a formatted header"""
-        width = 80
+        try:
+            width = os.get_terminal_size().columns
+        except OSError:
+            width = 80
         print(f"\n{Colors.CYAN}{'=' * width}{Colors.NC}")
         print(f"{Colors.BOLD}{text.center(width)}{Colors.NC}")
         print(f"{Colors.CYAN}{'=' * width}{Colors.NC}\n")
+    def printSeparator(self):
+        try:
+            width = os.get_terminal_size().columns
+        except OSError:
+            width = 80
+        print(f"{Colors.CYAN}{'=' * width}{Colors.NC}\n")
+        
 
     ###################################
     # The following methods are used to 
@@ -450,43 +459,51 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
         self.printHeader("OLLAMA RESPONSE")
         print(formatted_response)
-        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+        self.printSeparator()
 
     def deepModel(self):
+        def update_status(message):
+            print(f"\r\033[K{Colors.BOLD}Status:{Colors.NC} {message}", end='', flush=True)
+        
         print("Deep Model")
-
-        # Step1 : Initial prompt        
+        
+        # Step 1: Initial prompt
         self.buildDeepModeInitialPrompt()
-        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 1{Colors.NC}: Requesting for the workers using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
-        ollama_answer=self.callOllama()
+        output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 1{Colors.NC}: Requesting for the workers using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})..."
+        update_status(output_str)
+        ollama_answer = self.callOllama()
         if self.DEBUG:
+            print()  # New line before debug output
             formatted_to_shell_response = self.formatMdToShell(ollama_answer)
             formatted_response = self.formatText(formatted_to_shell_response)
-
             self.printHeader("OLLAMA RESPONSE")
             print(formatted_response)
-            print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
-
-        # Step2 : Workers
+            self.printSeparator()
+        
+        # Step 2: Workers
         self.getRequiredWorkers(ollama_answer)
-        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers : {self.required_workers.keys()}...\n")
+        output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers: {list(self.required_workers.keys())}..."
+        update_status(output_str)        
         self.runWorkers()
-
-
-        # Step3 : Final prompt with workers results
+        
+        # Step 3: Final prompt with workers results
         self.buildDeepModeFinalPrompt()
         if self.DEBUG:
-            print("-"*20+"FINAL REQUEST"+"-"*20)
+            print()
+            print("-" * 20 + "FINAL REQUEST" + "-" * 20)
             print(self.current_user_prompt)
-            print("-"*50)
-        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 3{Colors.NC}: Final AI request using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
-        ollama_answer=self.callOllama()
+            print("-" * 50)
+        output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 3{Colors.NC}: Final AI request using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})..."
+        update_status(output_str)
+        ollama_answer = self.callOllama()
+        print()
         formatted_to_shell_response = self.formatMdToShell(ollama_answer)
         formatted_response = self.formatText(formatted_to_shell_response)
-
         self.printHeader("OLLAMA RESPONSE")
         print(formatted_response)
-        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+        self.printSeparator()
+
+
 
 
 
@@ -585,7 +602,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
         for name, args in self.required_workers.items():
             markdown.append(self.toMarkdown(name,self.workers[name].executeAction(args)))
         self.workers_output_md="\n".join(markdown)
-        print(self.workers_output_md)
+        #print(self.workers_output_md)
 
     
     def runWorkersExample(self):
