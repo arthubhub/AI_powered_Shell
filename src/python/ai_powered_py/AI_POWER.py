@@ -268,12 +268,12 @@ The process is divided into three steps:
 ```
 It seems that ...
 [WORKERS]
-fictive_worker_check_connection=127.0.0.1,8.8.8.8
+network_conf
 ```
 - You are not sure the file allow this behavior ? just run something like that
 ```
 [WORKERS]
-fictive_worker_analyse_file=myfile.txt
+file_analysis=./test/myfile
 ```                      
 - Other valid example :
 ```
@@ -281,7 +281,7 @@ To help the user ...
 
 To find the type ... here is what we can perform:
 [WORKERS]
-fictive_worker_get_hostname
+executable_analysis=file.exe,run.bin
 ```
 ## Very Wrong Format                        
 - Never use non existing workers :
@@ -438,10 +438,11 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
         self.loadContext()
     
     def runModel(self): # <- called by the main program
-        if self.mode=="Q":
-            self.quickModel()
-        else:
+        if self.mode=="D":
             self.deepModel()
+        else:
+            self.quickModel()
+
             
 
 
@@ -579,9 +580,9 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
     def loadWorkers(self):
         if self.workers=={}:
             excludelist=["abstract"]
-            for _, name, _ in pkgutil.iter_modules(['workers']):
+            for _, name, _ in pkgutil.iter_modules(['ai_powered_py.workers']):
                 if name not in excludelist:
-                    module = importlib.import_module(f"workers.{name}")
+                    module = importlib.import_module(f"ai_powered_py.workers.{name}")
                     for attribute in dir(module):
                         attr = getattr(module, attribute)
                         if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker :

@@ -80,8 +80,8 @@ check_ollama_running() {
 
 ollama_interaction() {
     local prompt="$1"
-    local mode="${2:-quick}"  # quick or reflexion
-    local debug="0"
+    local mode="${2:-Q}"  # quick or reflexion
+    local debug="1"
     
     python3 "${AI_POWERED_SHELL_PATH}/python/main.py" --logs_file "$LOGS_JSON" --mode "${mode}" --last_command "$prompt" --debug "${debug}"
 
@@ -169,16 +169,16 @@ command_not_found_handler() {
         LOGGING_STATE=0
         
         echo -e "\nError: Command '$failed_command' not found." >&2
-        echo -ne "Would you like AI assistance? [Q]uick / [P]recise / [N]o (default: Q): " >&2
+        echo -ne "Would you like AI assistance? [Q]uick / [D]eep / [N]o (default: Q): " >&2
         read -r answer
         
         local mode="quick"
         case "${answer:l}" in
-            q|"")
-                mode="quick"
+            q|Q|"")
+                mode="Q"
                 ;;
-            p)
-                mode="reflexion"
+            d|D)
+                mode="D"
                 ;;
             n|f)
                 echo "No assistance requested." >&2
@@ -187,7 +187,7 @@ command_not_found_handler() {
                 ;;
             *)
                 echo "Invalid option. Using quick mode." >&2
-                mode="quick"
+                mode="Q"
                 ;;
         esac
         

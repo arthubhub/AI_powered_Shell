@@ -30,7 +30,7 @@ class FileAnalysis(workers.abstract.AbstractWorker):
 
 
             if not os.path.exists(cleaned_filename):
-                self.result[cleaned_filename] = {"error": f"File not found: {cleaned_filename}"}
+                self.result[cleaned_filename] = {"error": f"File not found: {cleaned_filename} in {os.getcwd()}"}
                 continue
             if not os.path.isfile(cleaned_filename):
                 self.result[cleaned_filename] = {"error": f"Not a file: {cleaned_filename}"}
