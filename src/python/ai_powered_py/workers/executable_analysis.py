@@ -29,17 +29,22 @@ class ExecutableAnalysis(workers.abstract.AbstractWorker):
 
     def executeAction(self, file_list: list[str]) -> dict:
         for file_path in file_list:
-            if not os.path.exists(file_path):
-                self.result[file_path] = {"error": f"File not found: {file_path}"}
+            cleaned_filename = file_path.strip('"\'')
+
+
+            if not os.path.exists(cleaned_filename):
+                self.result[cleaned_filename] = {"error": f"File not found: {cleaned_filename}"}
                 continue
-            self.result[file_path] = {}
-            self.result[file_path]["getFileType"] = self._getFileType(file_path)
-            self.result[file_path]["getArchitecture"] = self._getArchitecture(file_path)
-            self.result[file_path]["getDependencies"] = self._getDependencies(file_path)
-            self.result[file_path]["getStrings"] = self._getStrings(file_path)
-            self.result[file_path]["getSymbols"] = self._getSymbols(file_path)
-            self.result[file_path]["getSections"] = self._getSections(file_path)
-            self.result[file_path]["getDisassembly"] = self._getDisassembly(file_path)
+            if not os.path.isfile(cleaned_filename):
+                self.result[cleaned_filename] = {"error": f"Not a file: {cleaned_filename}"}
+            self.result[cleaned_filename] = {}
+            self.result[cleaned_filename]["getFileType"] = self._getFileType(cleaned_filename)
+            self.result[cleaned_filename]["getArchitecture"] = self._getArchitecture(cleaned_filename)
+            self.result[cleaned_filename]["getDependencies"] = self._getDependencies(cleaned_filename)
+            self.result[cleaned_filename]["getStrings"] = self._getStrings(cleaned_filename)
+            self.result[cleaned_filename]["getSymbols"] = self._getSymbols(cleaned_filename)
+            self.result[cleaned_filename]["getSections"] = self._getSections(cleaned_filename)
+            self.result[cleaned_filename]["getDisassembly"] = self._getDisassembly(file_path)
         return self.result
 
     def _getFileType(self, file_path: str) -> str:

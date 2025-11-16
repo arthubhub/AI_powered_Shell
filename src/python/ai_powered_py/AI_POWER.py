@@ -103,7 +103,7 @@ class AI_POWER:
 
     def buildQuickModePromptUser(self):
         self.current_user_prompt=""
-        user_prompt=["BEGIN USER PROMPT]"]
+        user_prompt=["[BEGIN USER PROMPT]"]
         user_prompt.append("""# Important
 Using the "SYSTEM INDICATIONS", you will analyse the context in the following sections, and find the problem stated by the user.
 You will see the following sections:
@@ -118,8 +118,8 @@ You will see the following sections:
         user_prompt.append(self.getCommandHistory())
         user_prompt.append(self.toMarkdown("Environment information",self.env_info))
         user_prompt.append(self.toMarkdown("Current directory content",self.current_dir_content))
-        user_prompt.append("# User Prompt")
-        user_prompt.append(f"Here is the last command of the user. Consider it as a failed command, or as its question : `{self.last_command}`")
+        user_prompt.append("# User Prompt <- that is where you find your mission")
+        user_prompt.append(f"IMPORTANT : Here is the last command of the user, it is your mission. Consider it as a failed command, or as its question : **`{self.last_command}`**")
         user_prompt.append("[END USER PROMPT]")
 
         self.current_user_prompt="\n".join(user_prompt)
@@ -400,9 +400,37 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
     def deepModel(self):
         print("Deep Model")
         self.buildDeepModePrompt()
-        print(f"\n{Colors.YELLOW}...{Colors.NC} Calling Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
-        self.getRequiredWorkers(self.callOllama())
+        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 1{Colors.NC}: Requesting for the workers using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
+        
+        ollama_answer=self.callOllama()
+        if 1:
+            formatted_to_shell_response = self.formatMdToShell(ollama_answer)
+            formatted_response = self.formatText(formatted_to_shell_response)
+
+            self.printHeader("OLLAMA RESPONSE")
+            print(formatted_response)
+            print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+
+        self.getRequiredWorkers(ollama_answer)
+
+
+        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers : {self.required_workers.keys()}...\n")
         self.runWorkers()
+        self.buildQuickModePrompt()
+        self.current_user_prompt+="\n# Workers Results\n"+self.workers_output_md
+
+        print("-"*20+"FINAL REQUEST"+"-"*20)
+        print(self.current_user_prompt)
+        print("-"*50)
+        print(f"\n{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 3{Colors.NC}: Final AI request using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})...\n")
+        ollama_answer=self.callOllama()
+        formatted_to_shell_response = self.formatMdToShell(ollama_answer)
+        formatted_response = self.formatText(formatted_to_shell_response)
+
+        self.printHeader("OLLAMA RESPONSE")
+        print(formatted_response)
+        print(f"\n{Colors.CYAN}{'=' * 80}{Colors.NC}\n")
+
 
 
 

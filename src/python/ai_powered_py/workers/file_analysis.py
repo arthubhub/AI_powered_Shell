@@ -4,7 +4,6 @@ import subprocess
 import shlex
 import os
 
-
 class FileAnalysis(workers.abstract.AbstractWorker):
     def __init__(self):
         self.actions=["getFileType", "getLineWordsCount", "getFilePermissions", "getFileStrings"]
@@ -22,14 +21,24 @@ class FileAnalysis(workers.abstract.AbstractWorker):
     def executeAction(self, file_list: list[str]) -> any:
         """Execute the actions."""
         for file in file_list:
-            if not os.path.exists(file):
-                self.result[file] = {"error": f"File not found: {file}"}
+            if '"' in file:
+                cleaned_filename=file.split('"')[1] # if file is : '"/home/file" # to check if the file exists', it will be handled (thanks dumb ai)
+            elif "'" in file:
+                cleaned_filename=file.split('"')[1]
+            else :
+                cleaned_filename = file
+
+
+            if not os.path.exists(cleaned_filename):
+                self.result[cleaned_filename] = {"error": f"File not found: {cleaned_filename}"}
                 continue
-            self.result[file] = {}
-            self.result[file]["Type"] = self._getFileType(file)
-            self.result[file]["LineWordsCount"] = self._getLineWordsCount(file)
-            self.result[file]["FilePermissions"] = self._getFilePermissions(file)
-            self.result[file]["Strings"] = self._getFileStrings(file)
+            if not os.path.isfile(cleaned_filename):
+                self.result[cleaned_filename] = {"error": f"Not a file: {cleaned_filename}"}
+            self.result[cleaned_filename] = {}
+            self.result[cleaned_filename]["Type"] = self._getFileType(cleaned_filename)
+            self.result[cleaned_filename]["LineWordsCount"] = self._getLineWordsCount(cleaned_filename)
+            self.result[cleaned_filename]["FilePermissions"] = self._getFilePermissions(cleaned_filename)
+            self.result[cleaned_filename]["Strings"] = self._getFileStrings(cleaned_filename)
 
         
         return self.result
