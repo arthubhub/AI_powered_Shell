@@ -60,6 +60,14 @@ Another example:
 
 This shows that the tool works. However, some features are missing and the AI doesn't handle all the formating well.
 
+### Using Deep mode
+
+We firtly send our request:
+<img width="1152" height="169" alt="image" src="https://github.com/user-attachments/assets/4d0b0188-450d-44ed-a99c-fec8230005d2" />
+
+And using the data from the workers the AI solve the problem:
+<img width="1721" height="583" alt="image" src="https://github.com/user-attachments/assets/08328d62-9df4-4b9d-ac68-04cba1ad31f9" />
+
 
 
 ### How workers are chosen by the AI ?
