@@ -1,6 +1,6 @@
 import importlib
 import pkgutil
-from ai_powered_py.workers.abstract import AbstractWorker
+from workers.abstract import AbstractWorker
 import json
 import re
 import sys
@@ -580,15 +580,27 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
 
 
     def loadWorkers(self):
-        if self.workers=={}:
-            excludelist=["abstract"]
-            for _, name, _ in pkgutil.iter_modules(['ai_powered_py.workers']):
+        if self.workers == {}:
+            excludelist = ["abstract"]
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            parent_dir = os.path.dirname(current_dir)
+            workers_path = os.path.join(parent_dir, 'workers')
+            
+            print(f"Looking for workers in: {workers_path}")
+            
+            for _, name, _ in pkgutil.iter_modules([workers_path]):
+                print(f"Found worker module: {name}")
                 if name not in excludelist:
-                    module = importlib.import_module(f"ai_powered_py.workers.{name}")
+                    module = importlib.import_module(f"workers.{name}")
                     for attribute in dir(module):
                         attr = getattr(module, attribute)
-                        if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker :
-                            self.workers[name]=attr()
+                        if isinstance(attr, type) and issubclass(attr, AbstractWorker) and attr != AbstractWorker:
+                            self.workers[name] = attr()
+            
+            print(f"Loaded workers: {self.workers}")
+            
+            
+                
 
     
     def describeWorkers(self):
