@@ -1,67 +1,53 @@
-# first tests
-
-import requests, re
-
-def format_response(text):
-    # Replace placeholders with actual Bash color codes
-    text = re.sub(r'\$\{CYAN\}', '\033[0;36m', text)
-    text = re.sub(r'\$\{NC\}', '\033[0m', text)
-    text = re.sub(r'\$\{BOLD\}', '\033[1m', text)
-    return text
+from ai_powered_py.AI_POWER import AI_POWER
+import argparse
 
 
-response = requests.post(
-    "http://localhost:11434/api/chat",
-    json={
-        "model": "mistral",
-        "stream": False, 
-        "messages": [
-            {
-                "role": "system",
-                "content": 'You are AI_POWERED_SHELL, a command-line assistant.\
-Your role is to analyze the provided context and user command, then respond with a quick, clear, and actionable summary.\
-\
-### Rules:\
-1. **Only use the provided context and command.** Never invent, assume, or reference files/commands not mentioned in the context.\
-2. **Never repeat examples or generic advice.** Only respond to the actual user input.\
-3. **Be concise:** One-line summary, followed by a short list of actionable solutions.\
-4. **Syntax:**\
-   - Replace ```bash with "${CYAN}" and ``` with "${NC}".\
-   - Replace `word` with "${BOLD}word${NC}".\
-5. **Format:**\
-   - Start with a one-line summary of the issue.\
-   - List only relevant, actionable solutions.\
-   - Give commands to run to perform useful actions or get context.\
-6. **If the context is unclear or missing, ask for clarification. Do NOT guess or use examples.**\
-\
-### Example of a good response:\
-The context indicates that {BOLD}file_example{NC} is of the format ..., but your but you are trying to use it as ...\
-To perform this actions:\
-- Modify the type by running: ${CYAN}commands to run ${NC}\
-- Or change the environment: ${CYAN}commands to run${NC}\
-+ Find additional information with ${CYAN}commands to run${NC}'
-            },
-            {
-                "role": "user",
-                "content": '[CONTEXT]$ ls\
-ch64  lib  Makefile  run.sh\
-$ file ch64 \
-ch64: ELF 32-bit MSB executable, MIPS, MIPS32 rel2 version 1 (SYSV), dynamically linked, interpreter /lib/ld.so.1, for GNU/Linux 3.2.0, BuildID[sha1]=449e7f2913faba0676cbf7c8d87ca63fcf993b64, not stripped\
-$ uname -a\
-Linux archlinux 6.17.3-arch2-1 #1 SMP PREEMPT_DYNAMIC Fri, 17 Oct 2025 13:29:06 +0000 x86_64 GNU/Linux\
-$ pwd\
-/home/arthub/Documents/Root-me/app-system/ELF MIPS - Basic ROP/Multiarch-PwnBox/shared/chall\
-$ whoami\
-arthub\
-$ host\
-host         hostapd      hostapd_cli  hostid       hostname     hostnamectl  \
-$ hostname\
-archlinux\
-    [PROMPT] Why cant i run my binary'
-            }
-        ]
-    }
-)
-text_response=response.json()['message']['content']
-formatted_response = format_response(text_response)
-print(formatted_response)
+
+def main():
+    parser = argparse.ArgumentParser(description='A simple script that makes an interface between CLI and AI_POWER lib.')
+    parser.add_argument(
+        "--logs_file",
+        type=str,
+        required=True,
+        help="Path to the logs file."
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="Q",
+        help="Mode of the AI : [Q]uick or [D]eep."
+    )
+    parser.add_argument(
+        "--last_command",
+        type=str,
+        required=True,
+        help="Last command executed."
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="mistral",
+        help="Model to use (default: mistral)."
+    )
+    parser.add_argument(
+        "--debug",
+        type=int,
+        default=0,
+        help="Debug level 0 or 1."
+    )
+
+    args = parser.parse_args()
+    AI_OBJECT = AI_POWER(
+        logs_file=args.logs_file,
+        mode=args.mode,
+        last_command=args.last_command,
+        model=args.model,
+        debug=args.debug
+    )
+    AI_OBJECT.buildObject()
+    AI_OBJECT.runModel()
+
+
+
+if __name__=="__main__":
+    main()
