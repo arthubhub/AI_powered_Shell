@@ -191,7 +191,7 @@ command_not_found_handler() {
                 ;;
         esac
         
-        local prompt="The command '$failed_command $args' was not found. What should I do?"
+        local prompt="$failed_command $args"
         ollama_interaction "$prompt" "$mode"
         
         # Re-enable logging

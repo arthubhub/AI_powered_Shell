@@ -218,7 +218,7 @@ You will see the following sections:
         user_prompt.append("# Workers Results")
         user_prompt.append(self.workers_output_md)
         user_prompt.append("# User Prompt <- that is where you find your mission")
-        user_prompt.append(f"IMPORTANT : Here is the last command of the user, it is your mission. Consider it as a failed command, or as its question : **`{self.last_command}`**")
+        user_prompt.append(f"IMPORTANT : Here is the last command of the user, it is your mission. Using the 'Workers Results' section, solve this problem : **`{self.last_command}`**")
         user_prompt.append("[END USER PROMPT]")
 
         self.current_user_prompt="\n".join(user_prompt)
@@ -471,7 +471,7 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
         # Step 1: Initial prompt
         self.buildDeepModeInitialPrompt()
         output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 1{Colors.NC}: Requesting for the workers using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})..."
-        update_status(output_str)
+        print(output_str)
         ollama_answer = self.callOllama()
         if self.DEBUG:
             print()  # New line before debug output
@@ -483,19 +483,21 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
         
         # Step 2: Workers
         self.getRequiredWorkers(ollama_answer)
-        output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers: {list(self.required_workers.keys())}..."
-        update_status(output_str)        
-        self.runWorkers()
+        output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 2{Colors.NC}: Running following workers: {self.required_workers}..."
+        print(output_str)        
+        if self.workers:
+            self.runWorkers()
         
         # Step 3: Final prompt with workers results
         self.buildDeepModeFinalPrompt()
+        print(self.current_user_prompt)
         if self.DEBUG:
             print()
             print("-" * 20 + "FINAL REQUEST" + "-" * 20)
             print(self.current_user_prompt)
             print("-" * 50)
         output_str = f"{Colors.YELLOW}...{Colors.NC} {Colors.BOLD}Step 3{Colors.NC}: Final AI request using Ollama API (model: {Colors.BOLD}mistral{Colors.NC})..."
-        update_status(output_str)
+        print(output_str)
         ollama_answer = self.callOllama()
         print()
         formatted_to_shell_response = self.formatMdToShell(ollama_answer)
@@ -553,7 +555,9 @@ file_analysis="/etc/test" # To check if the file exists <- WRONG
     def getRequiredWorkers(self,ollama_answer):
         if "[WORKERS]" not in ollama_answer:
             print(f"{Colors.RED}Error: 'ollama' didn't give any worker.{Colors.NC}", file=sys.stderr)
-            sys.exit(1)
+            #sys.exit(1)
+            self.required_workers
+            return 
         worker_list={}
 
         worker_blocs=ollama_answer.split("[WORKERS]\n")[1:] # <- we get all blocs beginning with [WORKERS]\n 
