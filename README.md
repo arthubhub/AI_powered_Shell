@@ -1,5 +1,33 @@
 # AI_powered_Shell
-This project implements a shell add-on to improve productivity with local LLM usage.
+This project implements a shell add-on to improve productivity with local LLM usage. It allows two ways of usage : Quick and Deep. The quick mode use a simple request to Ollama, while the Deep mode performs multiple steps, allowing the LLM to run jobs and get additional data.
+
+
+## Usage example
+
+### Installation
+Here just run ./install.sh with the desired shell:
+<img width="769" height="817" alt="image" src="https://github.com/user-attachments/assets/ab32f14d-3b41-4952-a5be-d80c83c8ce02" />
+
+### Usage
+Then just use the terminal as usual. If you need assistance, just ask!
+<img width="827" height="326" alt="image" src="https://github.com/user-attachments/assets/c226ac6a-c86c-42ce-bd91-d7b09c467cb0" />
+
+Finally, just let do the magic (it is not really magic):
+<img width="1384" height="674" alt="image" src="https://github.com/user-attachments/assets/2c74be3e-aff4-4b44-bd4c-64bcf51a8fb8" />
+
+Another example:
+<img width="878" height="806" alt="image" src="https://github.com/user-attachments/assets/8dc78692-fd08-44d0-a01e-1c89d9a2f4c8" />
+
+This shows that the tool works. However, some features are missing and the AI doesn't handle all the formating well.
+
+### Using Deep mode
+
+We firtly send our request:
+<img width="1152" height="169" alt="image" src="https://github.com/user-attachments/assets/4d0b0188-450d-44ed-a99c-fec8230005d2" />
+
+And using the data from the workers the AI solve the problem:
+<img width="1721" height="583" alt="image" src="https://github.com/user-attachments/assets/08328d62-9df4-4b9d-ac68-04cba1ad31f9" />
+
 
 ## Global workflow
 
@@ -42,35 +70,9 @@ The AI might need more specific context to handle user request, like analysing a
 
 
 
-## Usage example
-
-### Installation
-Here just run ./install.sh with the desired shell:
-<img width="769" height="817" alt="image" src="https://github.com/user-attachments/assets/ab32f14d-3b41-4952-a5be-d80c83c8ce02" />
-
-### Usage
-Then just use the terminal as usual. If you need assistance, just ask!
-<img width="827" height="326" alt="image" src="https://github.com/user-attachments/assets/c226ac6a-c86c-42ce-bd91-d7b09c467cb0" />
-
-Finally, just let do the magic (it is not really magic):
-<img width="1384" height="674" alt="image" src="https://github.com/user-attachments/assets/2c74be3e-aff4-4b44-bd4c-64bcf51a8fb8" />
-
-Another example:
-<img width="878" height="806" alt="image" src="https://github.com/user-attachments/assets/8dc78692-fd08-44d0-a01e-1c89d9a2f4c8" />
-
-This shows that the tool works. However, some features are missing and the AI doesn't handle all the formating well.
-
-### Using Deep mode
-
-We firtly send our request:
-<img width="1152" height="169" alt="image" src="https://github.com/user-attachments/assets/4d0b0188-450d-44ed-a99c-fec8230005d2" />
-
-And using the data from the workers the AI solve the problem:
-<img width="1721" height="583" alt="image" src="https://github.com/user-attachments/assets/08328d62-9df4-4b9d-ac68-04cba1ad31f9" />
 
 
-
-### How workers are chosen by the AI ?
+## How workers are chosen by the AI ?
 
 Here is an example of how the workers are chosen by the AI in multiple scenarios.
 
