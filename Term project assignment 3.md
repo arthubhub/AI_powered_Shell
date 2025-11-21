@@ -272,13 +272,15 @@ Doing the first mode only would have been really simple. But since my objective 
 
 To solve this problem, I have divided the python code into multiple interdependent components.
 
-![image.png](Term%20project%20assignment%203/image.png)
+<img width="661" height="402" alt="image" src="https://github.com/user-attachments/assets/9817b7ae-8804-49cc-a851-cfaf1ccd0bca" />
+
 
 Once again, the code is available at https://github.com/arthubhub/AI_powered_Shell.
 
 Here is the final list of the files of the python program:
 
-![image.png](Term%20project%20assignment%203/image%201.png)
+<img width="226" height="402" alt="image 1" src="https://github.com/user-attachments/assets/8b500659-dc16-4553-b9eb-199eb5a35d42" />
+
 
 ### Installation
 
@@ -298,33 +300,39 @@ Here are example results from the  “Validation process”:
 
 Easy: (Quick)
 
-![image.png](Term%20project%20assignment%203/image%202.png)
+<img width="1546" height="516" alt="image 2" src="https://github.com/user-attachments/assets/872fe25f-6d8e-4159-8052-66ad3072c5de" />
+
 
 Medium: (Quick)
 
-![image.png](Term%20project%20assignment%203/image%203.png)
+<img width="1545" height="355" alt="image 3" src="https://github.com/user-attachments/assets/86e13c35-a75c-4b00-ae6b-f464c712487d" />
+
 
 Hard: (Deep)
 
-![image.png](Term%20project%20assignment%203/image%204.png)
+<img width="1551" height="556" alt="image 4" src="https://github.com/user-attachments/assets/b0d7dee2-8c4d-4be7-bec3-fb131c0fe1c8" />
+
 
 ### 2. Find the file containing the string “True”
 
 Easy: (quick)
 
-![image.png](Term%20project%20assignment%203/image%205.png)
+<img width="1552" height="375" alt="image 5" src="https://github.com/user-attachments/assets/24733b7b-0572-4552-b750-1415d03c5c9e" />
+
 
 As you can see, the LLM is really really dumb. But we will say it is my fault.
 
 Hard: (Deep)
 
-![image.png](Term%20project%20assignment%203/image%206.png)
+<img width="1552" height="337" alt="image 6" src="https://github.com/user-attachments/assets/e31db875-5e97-41ed-bc63-bbe09a0e0ba4" />
+
 
 ### 3. Buggy DNS
 
 Easy: (Quick)
 
-![image.png](Term%20project%20assignment%203/image%207.png)
+<img width="1553" height="403" alt="image 7" src="https://github.com/user-attachments/assets/0bb3a395-f15f-4b5d-becc-ed4d07825a0d" />
+
 
 Hard: (Deep)
 
@@ -334,11 +342,13 @@ The network worker is temporarily unavailable…
 
 Easy: (Quick)
 
-![image.png](Term%20project%20assignment%203/image%208.png)
+<img width="1555" height="329" alt="image 8" src="https://github.com/user-attachments/assets/4b1f0d06-467c-434e-827a-52e541de3921" />
+
 
 Hard: (Deep)
 
-![image.png](Term%20project%20assignment%203/image%209.png)
+<img width="1552" height="441" alt="image 9" src="https://github.com/user-attachments/assets/0999a717-b8c8-4a68-a1e0-41fd38f36fcc" />
+
 
 # Conclusion
 
