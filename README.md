@@ -1,6 +1,11 @@
 # AI_powered_Shell
 This project implements a shell add-on to improve productivity with local LLM usage. It allows two ways of usage : Quick and Deep. The quick mode use a simple request to Ollama, while the Deep mode performs multiple steps, allowing the LLM to run jobs and get additional data.
 
+You can see the documents about the project status:
+- [Project_status_1.md](Project_status_1.md)
+- [Project_status_2.md](Project_status_2.md)
+- [Project_status_3.md](Project_status_3.md)
+
 
 ## Usage example
 
